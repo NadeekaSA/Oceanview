@@ -87,8 +87,8 @@
                 </div>
                 <div id="estimateSection" class="alert alert-success"
                     style="display: none; margin-bottom: 1rem; padding: 0.5rem;">
-                    <strong>Estimated Bill:</strong> <span id="estimateVal">$0.00</span>
-                    <br><small id="nightBasis">(0 nights x $0.00)</small>
+                    <strong>Estimated Bill:</strong> <span id="estimateVal">Rs. 0.00</span>
+                    <br><small id="nightBasis">(0 nights x Rs. 0.00)</small>
                 </div>
                 <button type="submit" class="btn" style="width: 100%;">Confirm Booking</button>
             </form>
@@ -115,7 +115,7 @@
                 roomData.filter(r => r.status === 'AVAILABLE').forEach(room => {
                     const opt = document.createElement('option');
                     opt.value = room.roomNumber;
-                    opt.textContent = `${room.roomNumber} - ${room.type} ($${room.rate}/n)`;
+                    opt.textContent = `${room.roomNumber} - ${room.type} (Rs. ${room.rate}/n)`;
                     select.appendChild(opt);
                 });
             } catch (error) { console.error(error); }
@@ -132,8 +132,8 @@
                 if (d2 > d1) {
                     const diffDays = Math.ceil(Math.abs(d2 - d1) / (1000 * 60 * 60 * 24));
                     const total = diffDays * room.rate;
-                    document.getElementById('estimateVal').textContent = `$${total.toFixed(2)}`;
-                    document.getElementById('nightBasis').textContent = `(${diffDays} nights x $${room.rate.toFixed(2)})`;
+                    document.getElementById('estimateVal').textContent = `Rs. ${total.toFixed(2)}`;
+                    document.getElementById('nightBasis').textContent = `(${diffDays} nights x Rs. ${room.rate.toFixed(2)})`;
                     estimateSection.style.display = 'block';
                 } else { estimateSection.style.display = 'none'; }
             } else { estimateSection.style.display = 'none'; }
@@ -153,7 +153,7 @@
                         <td>#${res.guestId}</td>
                         <td>${res.roomNumber}</td>
                         <td><small>${res.checkInDate} to ${res.checkOutDate}</small></td>
-                        <td>$${res.totalCost.toFixed(2)}</td>
+                        <td>Rs. ${res.totalCost.toFixed(2)}</td>
                         <td><span class="status-badge ${isCheckedOut ? 'status-available' : 'status-occupied'}">${res.status}</span></td>
                         <td>
                             ${!isCheckedOut ? `<button class="btn btn-sm" onclick="checkOut('${res.reservationNumber}')">Check Out</button>` : `<button class="btn btn-accent btn-sm" onclick="viewBill('${res.reservationNumber}')">View Bill</button>`}

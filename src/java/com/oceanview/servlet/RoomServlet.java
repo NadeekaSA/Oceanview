@@ -11,9 +11,14 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
 @WebServlet("/room")
 public class RoomServlet extends HttpServlet {
     private RoomDAO roomDAO = new RoomDAO();
+    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -76,6 +81,35 @@ public class RoomServlet extends HttpServlet {
                 response.getWriter()
                         .write("{\"success\": false, \"message\": \"Database error: " + e.getMessage() + "\"}");
             }
+        } else if ("maintenance".equals(action)) {
+            String roomNumber = request.getParameter("roomNumber");
+            try {
+                if (roomDAO.updateRoomStatus(roomNumber, "MAINTENANCE")) {
+                    // Schedule reversion after 10 minutes
+                    scheduler.schedule(() -> {
+                        try {
+                            roomDAO.updateRoomStatus(roomNumber, "AVAILABLE");
+                        } catch (SQLException e) {
+                            e.printStackTrace();
+                        }
+                    }, 10, TimeUnit.MINUTES);
+
+                    response.getWriter()
+                            .write("{\"success\": true, \"message\": \"Room set to maintenance for 10 mins\"}");
+                } else {
+                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                    response.getWriter().write("{\"success\": false, \"message\": \"Failed to update status\"}");
+                }
+            } catch (SQLException e) {
+                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                response.getWriter().write("{\"success\": false, \"message\": \"Database error\"}");
+            }
         }
+    }
+
+    @Override
+    public void destroy() {
+        scheduler.shutdown();
+        super.destroy();
     }
 }

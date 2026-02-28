@@ -10,6 +10,10 @@
         .stat-card {
             text-align: center;
             padding: 2.5rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
         }
 
         .stat-value {
@@ -29,50 +33,77 @@
 </head>
 
 <body>
-    <header>
-        <div class="logo">Ocean View Resort (Admin)</div>
-        <nav>
-            <a href="dashboard.html" class="btn btn-accent">Dashboard</a>
-            <button class="btn" onclick="logout()">Logout</button>
-        </nav>
-    </header>
+    <div class="layout-wrapper">
+        <aside class="sidebar">
+            <div class="sidebar-header">Ocean View Resort (Admin)</div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-item">System Configuration</a>
+                <a href="users.html" class="nav-item">Staff Management</a>
+                <a href="reports.html" class="nav-item active">System Reports</a>
+            </nav>
+            <div class="sidebar-footer">
+                <button class="btn btn-sm" style="width:100%" onclick="logout()">Logout</button>
+            </div>
+        </aside>
 
-    <div class="container">
-        <h1>System Performance Reports</h1>
-
-        <div class="grid">
-            <!-- Revenue Report -->
-            <div class="card stat-card">
-                <div class="stat-label">Total Revenue</div>
-                <div id="revenueValue" class="stat-value">$0.00</div>
-                <p>Total earnings from all confirmed stays</p>
+        <main class="main-content">
+            <div class="top-bar">
+                <h2 id="viewTitle">System Performance Reports</h2>
+                <div class="user-info">Logged in as: <strong>Administrator</strong></div>
             </div>
 
-            <!-- Occupancy Report -->
-            <div class="card stat-card">
-                <div class="stat-label">Current Occupancy</div>
-                <div id="occupancyValue" class="stat-value">0%</div>
-                <div id="occupancyDetail" style="color: #666;">-- / -- Rooms Occupied</div>
-            </div>
-        </div>
+            <div class="grid">
+                <!-- Revenue Report -->
+                <div class="card stat-card">
+                    <div class="stat-label">Total Revenue</div>
+                    <div id="revenueValue" class="stat-value">Rs. 0.00</div>
+                    <p style="color: #888;">Cumulative earnings from all bookings</p>
+                </div>
 
-        <div class="card" style="margin-top: 2rem;">
-            <h3>System Reports & Export</h3>
-            <p style="margin-bottom: 1.5rem;">Generate and download detailed reservation reports in multiple formats.
-            </p>
-            <div class="grid" style="grid-template-columns: repeat(3, 1fr); gap: 1rem;">
-                <button onclick="exportReport('csv')" class="btn">Export as CSV</button>
-                <button onclick="exportReport('excel')" class="btn">Export as Excel</button>
-                <button onclick="window.print()" class="btn btn-accent">Download PDF</button>
+                <!-- Occupancy Report -->
+                <div class="card stat-card">
+                    <div class="stat-label">Current Occupancy</div>
+                    <div id="occupancyValue" class="stat-value">0%</div>
+                    <div id="occupancyDetail" style="color: #888; font-weight: 600;">-- / -- Rooms Occupied</div>
+                </div>
             </div>
-        </div>
 
-        <div class="card" style="margin-top: 2rem;">
-            <h3>Reporting Insights</h3>
-            <p>Reports are generated in real-time based on the current database state. Occupancy is calculated based on
-                rooms currently marked as 'OCCUPIED'. Revenue includes all 'CHECKED_IN' and 'CHECKED_OUT' reservations.
-            </p>
-        </div>
+            <div class="card" style="margin-top: 2rem;">
+                <h3>Data Extraction & Analytics</h3>
+                <p style="margin-bottom: 2rem; color: #666;">Export comprehensive system data for offline analysis and
+                    record-keeping.</p>
+
+                <div class="grid" style="grid-template-columns: repeat(3, 1fr); gap: 1.5rem;">
+                    <div
+                        style="text-align: center; padding: 1rem; border: 1px dashed #ddd; border-radius: var(--radius-md);">
+                        <p style="margin-bottom: 1rem; font-weight: 600;">CSV Format</p>
+                        <button onclick="exportReport('csv')" class="btn" style="width: 100%;">Export CSV</button>
+                    </div>
+                    <div
+                        style="text-align: center; padding: 1rem; border: 1px dashed #ddd; border-radius: var(--radius-md);">
+                        <p style="margin-bottom: 1rem; font-weight: 600;">Excel Spreadsheet</p>
+                        <button onclick="exportReport('excel')" class="btn" style="width: 100%;">Export Excel</button>
+                    </div>
+                    <div
+                        style="text-align: center; padding: 1rem; border: 1px dashed #ddd; border-radius: var(--radius-md);">
+                        <p style="margin-bottom: 1rem; font-weight: 600;">PDF Document</p>
+                        <button onclick="window.print()" class="btn btn-accent" style="width: 100%;">Download
+                            PDF</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top: 2rem; background: #f8fafc; border-left: 4px solid var(--primary);">
+                <h3>Reporting Insights</h3>
+                <p style="color: #555; line-height: 1.6;">
+                    These reports are generated in real-time. <strong>Occupancy</strong> is calculated based on rooms
+                    currently marked as
+                    <span class="status-badge status-occupied"
+                        style="padding: 2px 8px; font-size: 0.8rem;">OCCUPIED</span>.
+                    <strong>Revenue</strong> reflects the total cost of all valid reservations in the system.
+                </p>
+            </div>
+        </main>
     </div>
 
     <script>
@@ -90,7 +121,7 @@
                 const response = await fetch('reports');
                 const data = await response.json();
 
-                document.getElementById('revenueValue').textContent = `$${data.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+                document.getElementById('revenueValue').textContent = `Rs. ${data.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
 
                 const occupancyPercent = data.occupancy.total > 0 ?
                     Math.round((data.occupancy.occupied / data.occupancy.total) * 100) : 0;

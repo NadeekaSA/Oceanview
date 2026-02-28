@@ -9,64 +9,78 @@
 </head>
 
 <body>
-    <header>
-        <div class="logo">Ocean View Resort (Admin)</div>
-        <nav>
-            <a href="dashboard.html" class="btn btn-accent">Dashboard</a>
-            <button class="btn" onclick="logout()">Logout</button>
-        </nav>
-    </header>
+    <div class="layout-wrapper">
+        <aside class="sidebar">
+            <div class="sidebar-header">Ocean View Resort (Admin)</div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-item">System Configuration</a>
+                <a href="users.html" class="nav-item active">Staff Management</a>
+                <a href="reports.html" class="nav-item">System Reports</a>
+            </nav>
+            <div class="sidebar-footer">
+                <button class="btn btn-sm" style="width:100%" onclick="logout()">Logout</button>
+            </div>
+        </aside>
 
-    <div class="container">
-        <h1>Staff Management</h1>
-
-        <div class="grid">
-            <!-- Create User -->
-            <div class="card">
-                <h3>Add New Staff</h3>
-                <form id="userForm">
-                    <input type="hidden" name="action" value="create">
-                    <div class="form-group">
-                        <input type="text" name="username" placeholder="Username" required>
-                    </div>
-                    <div class="form-group">
-                        <input type="password" name="password" placeholder="Password" required>
-                    </div>
-                    <div class="form-group">
-                        <input type="text" name="fullName" placeholder="Full Name" required>
-                    </div>
-                    <div class="form-group">
-                        <select name="role" required>
-                            <option value="RECEPTIONIST">Receptionist</option>
-                            <option value="ADMIN">Admin</option>
-                        </select>
-                    </div>
-                    <button type="submit" class="btn" style="width: 100%;">Create Account</button>
-                </form>
+        <main class="main-content">
+            <div class="top-bar">
+                <h2 id="viewTitle">Staff Management</h2>
+                <div class="user-info">Logged in as: <strong>Administrator</strong></div>
             </div>
 
-            <!-- User List -->
-            <div class="card" style="grid-column: span 2;">
-                <h3>Current Staff</h3>
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Username</th>
-                                <th>Role</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="userTableBody">
-                            <!-- Populated by JS -->
-                        </tbody>
-                    </table>
+            <div class="grid">
+                <!-- Create User -->
+                <div class="card">
+                    <h3>Add New Staff Member</h3>
+                    <p style="margin-bottom: 1.5rem; color: #666;">Create credentials for receptionists or secondary
+                        administrators.</p>
+                    <form id="userForm">
+                        <input type="hidden" name="action" value="create">
+                        <div class="form-group">
+                            <label>Full Name</label>
+                            <input type="text" name="fullName" placeholder="e.g. John Doe" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Username</label>
+                            <input type="text" name="username" placeholder="e.g. jdoe" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Password</label>
+                            <input type="password" name="password" placeholder="••••••••" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Role</label>
+                            <select name="role" required>
+                                <option value="RECEPTIONIST">Receptionist</option>
+                                <option value="ADMIN">Administrator</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn" style="width: 100%;">Create Account</button>
+                    </form>
+                </div>
+
+                <!-- User List -->
+                <div class="card" style="grid-column: span 2;">
+                    <h3>Current Staff Accounts</h3>
+                    <div id="statusMsg" class="alert" style="display: none; margin-bottom: 1.5rem;"></div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Username</th>
+                                    <th>Role</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="userTableBody">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
-        </div>
-
-        <div id="statusMsg" class="alert" style="display: none; margin-top: 2rem;"></div>
+        </main>
     </div>
 
     <script>
@@ -85,11 +99,11 @@
                 users.forEach(user => {
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
-                        <td>${user.fullName}</td>
+                        <td><strong>${user.fullName}</strong></td>
                         <td>${user.username}</td>
                         <td><span class="status-badge status-available">${user.role}</span></td>
                         <td>
-                            <button class="btn alert-error" onclick="deleteUser(${user.id})" ${user.role === 'ADMIN' ? 'disabled' : ''}>Delete</button>
+                            <button class="btn alert-error btn-sm" onclick="deleteUser(${user.id})" ${user.role === 'ADMIN' ? 'disabled title="Cannot delete admin"' : ''}>Delete</button>
                         </td>
                     `;
                     tbody.appendChild(tr);
@@ -125,6 +139,7 @@
             statusMsg.textContent = msg;
             statusMsg.className = `alert ${success ? 'alert-success' : 'alert-error'}`;
             statusMsg.style.display = 'block';
+            setTimeout(() => { statusMsg.style.display = 'none'; }, 5000);
         }
 
         document.getElementById('userForm').addEventListener('submit', async (e) => {

@@ -9,67 +9,75 @@
 </head>
 
 <body>
-    <header>
-        <div class="logo">Ocean View Resort (Admin)</div>
-        <nav>
-            <button class="btn btn-accent" onclick="logout()">Logout</button>
-        </nav>
-    </header>
+    <div class="layout-wrapper">
+        <aside class="sidebar">
+            <div class="sidebar-header">Ocean View Resort (Admin)</div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-item active">System Configuration</a>
+                <a href="users.html" class="nav-item">Staff Management</a>
+                <a href="reports.html" class="nav-item">System Reports</a>
+            </nav>
+            <div class="sidebar-footer">
+                <button class="btn btn-sm" style="width:100%" onclick="logout()">Logout</button>
+            </div>
+        </aside>
 
-    <div class="container">
-        <h1>System Configuration & Management</h1>
-
-        <div class="grid">
-            <!-- Room Rate Config -->
-            <div class="card">
-                <h3>Update Room Rates</h3>
-                <form id="rateForm">
-                    <input type="hidden" name="action" value="updateRate">
-                    <div class="form-group">
-                        <select name="roomNumber" id="rateRoomSelect" required>
-                            <option value="">Loading rooms...</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <input type="number" step="0.01" name="rate" placeholder="New Nightly Rate" required>
-                    </div>
-                    <button type="submit" class="btn" style="width: 100%;">Update Rate</button>
-                </form>
+        <main class="main-content">
+            <div class="top-bar">
+                <h2 id="viewTitle">System Configuration</h2>
+                <div class="user-info">Logged in as: <strong>Administrator</strong></div>
             </div>
 
-            <!-- Add New Room -->
-            <div class="card">
-                <h3>Add New Room</h3>
-                <form id="addRoomForm">
-                    <input type="hidden" name="action" value="add">
-                    <div class="form-group">
-                        <input type="text" name="roomNumber" placeholder="Room Number (e.g. 301)" required>
-                    </div>
-                    <div class="form-group">
-                        <select name="type" required>
-                            <option value="SINGLE">Single</option>
-                            <option value="DOUBLE">Double</option>
-                            <option value="SUITE">Suite</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <input type="number" step="0.01" name="rate" placeholder="Default Rate" required>
-                    </div>
-                    <button type="submit" class="btn btn-accent" style="width: 100%;">Create Room</button>
-                </form>
-            </div>
-        </div>
+            <div class="grid">
+                <!-- Room Rate Config -->
+                <div class="card">
+                    <h3>Update Room Rates</h3>
+                    <p style="margin-bottom: 1rem; color: #666;">Modify nightly rates for existing rooms.</p>
+                    <form id="rateForm">
+                        <input type="hidden" name="action" value="updateRate">
+                        <div class="form-group">
+                            <label>Select Room</label>
+                            <select name="roomNumber" id="rateRoomSelect" required>
+                                <option value="">Loading rooms...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>New Nightly Rate (Rs.)</label>
+                            <input type="number" step="0.01" name="rate" placeholder="e.g. 150.00" required>
+                        </div>
+                        <button type="submit" class="btn" style="width: 100%;">Update Rate</button>
+                    </form>
+                </div>
 
-        <div class="card" style="margin-top: 2rem;">
-            <h3>Quick Links</h3>
-            <div style="display: flex; gap: 1rem;">
-                <a href="reports.html" class="btn" style="flex: 1; text-align: center;">View Occupancy Report</a>
-                <a href="users.html" class="btn btn-accent" style="flex: 1; text-align: center;">Manage Staff
-                    Accounts</a>
+                <!-- Add New Room -->
+                <div class="card">
+                    <h3>Add New Room</h3>
+                    <p style="margin-bottom: 1rem; color: #666;">Register a new room into the system.</p>
+                    <form id="addRoomForm">
+                        <input type="hidden" name="action" value="add">
+                        <div class="form-group">
+                            <label>Room Number</label>
+                            <input type="text" name="roomNumber" placeholder="e.g. 301" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Room Type</label>
+                            <select name="type" required>
+                                <option value="SINGLE">Single</option>
+                                <option value="DOUBLE">Double</option>
+                                <option value="SUITE">Suite</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Default Nightly Rate (Rs.)</label>
+                            <input type="number" step="0.01" name="rate" placeholder="e.g. 120.00" required>
+                        </div>
+                        <button type="submit" class="btn btn-accent" style="width: 100%;">Create Room</button>
+                    </form>
+                </div>
             </div>
-        </div>
 
-        <div id="statusMsg" class="alert" style="display: none; margin-top: 2rem;"></div>
+            <div id="statusMsg" class="alert" style="display: none; margin-top: 2rem;"></div>
+        </main>
     </div>
 
     <script>
@@ -87,7 +95,7 @@
                 rooms.forEach(r => {
                     const opt = document.createElement('option');
                     opt.value = r.roomNumber;
-                    opt.textContent = `Room ${r.roomNumber} (${r.type})`;
+                    opt.textContent = `Room ${r.roomNumber} (${r.type}) - Rs. ${r.rate}/night`;
                     select.appendChild(opt);
                 });
             } catch (err) { console.error(err); }

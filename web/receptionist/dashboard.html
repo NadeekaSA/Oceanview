@@ -122,7 +122,7 @@
                         <td>Guest #${res.guestId}</td>
                         <td>${res.roomNumber}</td>
                         <td><small>${res.checkInDate} to ${res.checkOutDate}</small></td>
-                        <td>$${res.totalCost.toFixed(2)}</td>
+                        <td>Rs. ${res.totalCost.toFixed(2)}</td>
                         <td><span class="status-badge ${isCheckedOut ? 'status-available' : 'status-occupied'}">${res.status}</span></td>
                     `;
                     tbody.appendChild(tr);
