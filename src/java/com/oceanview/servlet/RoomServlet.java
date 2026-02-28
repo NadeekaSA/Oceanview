@@ -1,6 +1,7 @@
 package com.oceanview.servlet;
 
 import com.oceanview.dao.RoomDAO;
+import com.oceanview.model.Room;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -8,10 +9,37 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.List;
 
-@WebServlet("/admin/rooms")
+@WebServlet("/room")
 public class RoomServlet extends HttpServlet {
     private RoomDAO roomDAO = new RoomDAO();
+
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        response.setContentType("application/json");
+        try {
+            List<Room> rooms = roomDAO.getAllRooms();
+            StringBuilder json = new StringBuilder("[");
+            for (int i = 0; i < rooms.size(); i++) {
+                Room r = rooms.get(i);
+                json.append("{")
+                        .append("\"roomNumber\":\"").append(r.getRoomNumber()).append("\",")
+                        .append("\"type\":\"").append(r.getType()).append("\",")
+                        .append("\"rate\":").append(r.getRate()).append(",")
+                        .append("\"status\":\"").append(r.getStatus()).append("\"")
+                        .append("}");
+                if (i < rooms.size() - 1)
+                    json.append(",");
+            }
+            json.append("]");
+            response.getWriter().write(json.toString());
+        } catch (SQLException e) {
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            response.getWriter().write("{\"success\": false, \"message\": \"Database error\"}");
+        }
+    }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)

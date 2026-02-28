@@ -53,20 +53,23 @@
                         <input type="number" name="guestId" placeholder="Guest ID" required>
                     </div>
                     <div class="form-group">
-                        <select name="roomNumber" required>
+                        <select name="roomNumber" id="roomSelect" required onchange="calculateCost()">
                             <option value="">Select Room</option>
-                            <option value="101">101 - Single</option>
-                            <option value="102">102 - Double</option>
-                            <option value="201">201 - Suite</option>
+                            <!-- Populated dynamically -->
                         </select>
                     </div>
                     <div class="form-group">
                         <label>Check-in Date</label>
-                        <input type="date" name="checkIn" required>
+                        <input type="date" name="checkIn" id="checkIn" required onchange="calculateCost()">
                     </div>
                     <div class="form-group">
                         <label>Check-out Date</label>
-                        <input type="date" name="checkOut" required>
+                        <input type="date" name="checkOut" id="checkOut" required onchange="calculateCost()">
+                    </div>
+                    <div id="estimateSection" class="alert alert-success"
+                        style="display: none; margin-bottom: 1rem; padding: 0.5rem;">
+                        <strong>Estimated Bill:</strong> <span id="estimateVal">$0.00</span>
+                        <br><small id="nightBasis">(0 nights x $0.00)</small>
                     </div>
                     <button type="submit" class="btn btn-accent" style="width: 100%;">Create Booking</button>
                 </form>
@@ -106,9 +109,56 @@
     </div>
 
     <script>
+        let roomData = [];
+
         async function logout() {
             await fetch('../logout');
             window.location.href = '../index.html';
+        }
+
+        async function loadRooms() {
+            try {
+                const response = await fetch('../room');
+                roomData = await response.json();
+                const select = document.getElementById('roomSelect');
+                select.innerHTML = '<option value="">Select Room</option>';
+
+                roomData.filter(r => r.status === 'AVAILABLE').forEach(room => {
+                    const opt = document.createElement('option');
+                    opt.value = room.roomNumber;
+                    opt.textContent = `${room.roomNumber} - ${room.type} ($${room.rate}/night)`;
+                    select.appendChild(opt);
+                });
+            } catch (error) {
+                console.error('Error loading rooms:', error);
+            }
+        }
+
+        function calculateCost() {
+            const roomNumber = document.getElementById('roomSelect').value;
+            const checkIn = document.getElementById('checkIn').value;
+            const checkOut = document.getElementById('checkOut').value;
+            const estimateSection = document.getElementById('estimateSection');
+
+            if (roomNumber && checkIn && checkOut) {
+                const room = roomData.find(r => r.roomNumber === roomNumber);
+                const d1 = new Date(checkIn);
+                const d2 = new Date(checkOut);
+
+                if (d2 > d1) {
+                    const diffTime = Math.abs(d2 - d1);
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    const total = diffDays * room.rate;
+
+                    document.getElementById('estimateVal').textContent = `$${total.toFixed(2)}`;
+                    document.getElementById('nightBasis').textContent = `(${diffDays} nights x $${room.rate.toFixed(2)})`;
+                    estimateSection.style.display = 'block';
+                } else {
+                    estimateSection.style.display = 'none';
+                }
+            } else {
+                estimateSection.style.display = 'none';
+            }
         }
 
         async function loadGuests() {
@@ -197,6 +247,8 @@
                     if (result.success) {
                         e.target.reset();
                         loadGuests(); // Refresh list on new registration
+                        loadRooms(); // Refresh available rooms
+                        document.getElementById('estimateSection').style.display = 'none';
                     }
                 } catch (error) {
                     showStatus('Connection Error', false);
@@ -207,6 +259,7 @@
         handleForm('guestForm', '../guest');
         handleForm('resForm', '../reservation');
         loadGuests();
+        loadRooms();
     </script>
 </body>
 

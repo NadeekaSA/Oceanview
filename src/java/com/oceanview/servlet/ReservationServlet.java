@@ -57,7 +57,8 @@ public class ReservationServlet extends HttpServlet {
                         "CHECKED_IN");
 
                 if (reservationDAO.createReservation(res)) {
-                    response.getWriter().write("{\"success\": true, \"reservationNumber\": \"" + resNo + "\"}");
+                    response.getWriter().write("{\"success\": true, \"reservationNumber\": \"" + resNo
+                            + "\", \"totalCost\": " + totalCost + "}");
                 } else {
                     response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                     response.getWriter().write("{\"success\": false, \"message\": \"Failed to create reservation\"}");
