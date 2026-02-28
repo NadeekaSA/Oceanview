@@ -103,7 +103,9 @@
     <script>
         function showModal() { document.getElementById('regModal').style.display = 'flex'; }
         function hideModal() { document.getElementById('regModal').style.display = 'none'; }
-
+    </script>
+    <script src="../js/help_manager.js"></script>
+    <script>
         async function logout() {
             await fetch('../logout');
             window.location.href = '../index.html';

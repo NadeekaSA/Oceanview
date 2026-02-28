@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Help | Ocean View Resort</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .help-card {
+            margin-bottom: 2rem;
+        }
+
+        .help-card h3 {
+            border-bottom: 3px solid var(--accent);
+            width: auto;
+            padding-right: 2rem;
+        }
+
+        .step-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .step-list li {
+            margin-bottom: 1rem;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        .step-list li::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: var(--secondary);
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="layout-wrapper">
+        <aside class="sidebar">
+            <div class="sidebar-header">Ocean View Resort</div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-item">Dashboard Overview</a>
+                <a href="guests.html" class="nav-item">Guest Management</a>
+                <a href="rooms.html" class="nav-item">Room Status</a>
+                <a href="reservations.html" class="nav-item">Reservations</a>
+                <a href="help.html" class="nav-item active">System Help</a>
+            </nav>
+            <div class="sidebar-footer">
+                <button class="btn btn-sm" style="width:100%" onclick="location.href='../logout'">Logout</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="top-bar">
+                <h2>Help & Documentation</h2>
+                <div class="user-info">Receptionist Guide</div>
+            </div>
+
+            <div class="grid">
+                <div class="card help-card">
+                    <h3>📅 Reservation Management</h3>
+                    <p>Learn how to handle the full guest booking lifecycle.</p>
+                    <ul class="step-list">
+                        <li><strong>Creating Bookings:</strong> Select a guest and available room. Dates will
+                            auto-calculate the bill.</li>
+                        <li><strong>Check-In:</strong> Guests with "BOOKED" status must be manually checked in upon
+                            arrival using the blue button.</li>
+                        <li><strong>Check-Out:</strong> Click the Check-Out button to release the room and generate the
+                            final bill for printing.</li>
+                    </ul>
+                </div>
+
+                <div class="card help-card">
+                    <h3>🛌 Room Status & Occupancy</h3>
+                    <p>Managing room availability and maintenance.</p>
+                    <ul class="step-list">
+                        <li><strong>Status Colors:</strong> Green (Available), Red (Occupied), Blue (Reserved), Orange
+                            (Maintenance).</li>
+                        <li><strong>Maintenance Mode:</strong> Use the "Maintain" button for cleaning or repairs. The
+                            room reverts to Available automatically after 10 minutes.</li>
+                        <li><strong>Search:</strong> Use the search bars in both Room and Reservation views to find data
+                            instantly.</li>
+                    </ul>
+                </div>
+
+                <div class="card help-card">
+                    <h3>👥 Guest Services</h3>
+                    <p>Maintaining accurate guest records.</p>
+                    <ul class="step-list">
+                        <li><strong>New Guests:</strong> Always register guests first before making a reservation.</li>
+                        <li><strong>Profile Verification:</strong> Click "View" to see full details and contact info for
+                            any registered guest.</li>
+                    </ul>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+
+</html>

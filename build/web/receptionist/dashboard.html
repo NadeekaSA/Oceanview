@@ -72,7 +72,7 @@
                         </thead>
                         <tbody id="todayResBody">
                             <tr>
-                                <td colspan="6" style="text-align center; padding: 2rem;">Loading today's activity...
+                                <td colspan="6" style="text-align: center; padding: 2rem;">Loading today's activity...
                                 </td>
                             </tr>
                         </tbody>
@@ -82,58 +82,61 @@
         </main>
     </div>
 
+    <script src="../js/help_manager.js"></script>
     <script>
         async function logout() {
             await fetch('../logout');
             window.location.href = '../index.html';
         }
 
-        async function loadOverview() {
+        async function loadStats() {
             try {
-                // Fetch stats from ReportServlet
-                const reportResp = await fetch('../admin/reports'); // Reusing existing report logic for stats
-                const stats = await reportResp.json();
-
-                document.getElementById('statAvailable').textContent = stats.occupancy.available;
-                document.getElementById('statOccupied').textContent = stats.occupancy.occupied;
-
-                // Fetch reservations
-                const resResp = await fetch('../reservation?action=getAll'); // Simplified GET for all
-                const reservations = await resResp.json();
-
-                // Fix: Only count CHECKED_IN as active bookings
-                const activeCount = reservations.filter(r => r.status === 'CHECKED_IN').length;
-                document.getElementById('statTotalRes').textContent = activeCount;
-
-                const tbody = document.getElementById('todayResBody');
-                tbody.innerHTML = '';
-
-                if (reservations.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #666; padding: 2rem;">No recent bookings.</td></tr>';
-                    return;
-                }
-
-                // Show last 5
-                reservations.slice(0, 5).forEach(res => {
-                    const tr = document.createElement('tr');
-                    const isCheckedOut = res.status === 'CHECKED_OUT';
-                    tr.innerHTML = `
-                        <td><strong>${res.reservationNumber}</strong></td>
-                        <td>Guest #${res.guestId}</td>
-                        <td>${res.roomNumber}</td>
-                        <td><small>${res.checkInDate} to ${res.checkOutDate}</small></td>
-                        <td>Rs. ${res.totalCost.toFixed(2)}</td>
-                        <td><span class="status-badge ${isCheckedOut ? 'status-available' : 'status-occupied'}">${res.status}</span></td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-
+                const response = await fetch('../report?action=stats');
+                const stats = await response.json();
+                document.getElementById('statAvailable').innerText = stats.availableRooms;
+                document.getElementById('statOccupied').innerText = stats.occupiedRooms;
+                document.getElementById('statTotalRes').innerText = stats.activeBookings;
             } catch (error) {
-                console.error('Error loading overview:', error);
+                console.error('Error loading stats:', error);
+                document.getElementById('statAvailable').innerText = '!';
             }
         }
 
-        loadOverview();
+        async function loadRecentActivity() {
+            try {
+                const response = await fetch('../report?action=recent');
+                const activity = await response.json();
+                const tbody = document.getElementById('todayResBody');
+                tbody.innerHTML = '';
+
+                if (!activity || activity.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #666; padding: 2rem;">No recent activity.</td></tr>';
+                    return;
+                }
+
+                activity.forEach(item => {
+                    const tr = document.createElement('tr');
+                    const isCheckedOut = item.status === 'CHECKED_OUT';
+                    tr.innerHTML = `
+                        <td><strong>${item.reservationNumber}</strong></td>
+                        <td>Guest #${item.guestId}</td>
+                        <td>${item.roomNumber}</td>
+                        <td><small>${item.checkInDate} to ${item.checkOutDate}</small></td>
+                        <td>Rs. ${parseFloat(item.totalCost).toFixed(2)}</td>
+                        <td><span class="status-badge ${isCheckedOut ? 'status-available' : 'status-occupied'}">${item.status}</span></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (error) {
+                console.error('Error loading activity:', error);
+                document.getElementById('todayResBody').innerHTML = '<tr><td colspan="6" style="text-align: center; color: #fa5252; padding: 2rem;">Error loading recent activity. Please try again later.</td></tr>';
+            }
+        }
+
+        // Initialize dashboard
+        loadStats();
+        loadRecentActivity();
+        initHelp('dashboard');
     </script>
 </body>
 

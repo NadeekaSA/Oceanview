@@ -118,7 +118,7 @@
 
         async function loadReports() {
             try {
-                const response = await fetch('reports');
+                const response = await fetch('../report');
                 const data = await response.json();
 
                 document.getElementById('revenueValue').textContent = `Rs. ${data.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
@@ -133,8 +133,11 @@
                 console.error('Error loading reports:', error);
             }
         }
-
+    </script>
+    <script src="../js/help_manager.js"></script>
+    <script>
         loadReports();
+        initHelp('admin');
     </script>
 </body>
 
