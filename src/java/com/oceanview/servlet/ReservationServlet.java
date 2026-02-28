@@ -1,3 +1,5 @@
+package com.oceanview.servlet;
+
 import com.oceanview.dao.GuestDAO;
 import com.oceanview.dao.ReservationDAO;
 import com.oceanview.dao.RoomDAO;
