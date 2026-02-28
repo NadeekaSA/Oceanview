@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Room Status | Ocean View Resort</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body>
+    <div class="layout-wrapper">
+        <aside class="sidebar">
+            <div class="sidebar-header">Ocean View Resort</div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-item">Dashboard Overview</a>
+                <a href="guests.html" class="nav-item">Guest Management</a>
+                <a href="rooms.html" class="nav-item active">Room Status</a>
+                <a href="reservations.html" class="nav-item">Reservations</a>
+            </nav>
+            <div class="sidebar-footer">
+                <button class="btn btn-sm" style="width:100%" onclick="logout()">Logout</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="top-bar">
+                <h2>Room Status & Rates</h2>
+                <div class="user-info">Live Occupancy View</div>
+            </div>
+
+            <div class="card">
+                <h3>All Rooms</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Room #</th>
+                                <th>Type</th>
+                                <th>Rate (per night)</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="roomTableBody">
+                            <tr>
+                                <td colspan="5" style="text-align: center; padding: 2rem;">Loading rooms...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        async function logout() {
+            await fetch('../logout');
+            window.location.href = '../index.html';
+        }
+
+        async function loadRooms() {
+            try {
+                const response = await fetch('../room');
+                const rooms = await response.json();
+                const tbody = document.getElementById('roomTableBody');
+                tbody.innerHTML = '';
+
+                rooms.forEach(room => {
+                    const statusClass = room.status === 'AVAILABLE' ? 'status-available' : 'status-occupied';
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td><strong>${room.roomNumber}</strong></td>
+                        <td>${room.type}</td>
+                        <td>$${room.rate.toFixed(2)}</td>
+                        <td><span class="status-badge ${statusClass}">${room.status}</span></td>
+                        <td>
+                            ${room.status === 'AVAILABLE' ?
+                            `<a href="reservations.html?room=${room.roomNumber}" class="btn btn-sm">Book</a>` :
+                            `<button class="btn btn-sm" disabled>Reserved</button>`}
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (error) {
+                console.error('Error loading rooms:', error);
+            }
+        }
+
+        loadRooms();
+    </script>
+</body>
+
+</html>

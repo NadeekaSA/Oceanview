@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reservations | Ocean View Resort</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body>
+    <div class="layout-wrapper">
+        <aside class="sidebar">
+            <div class="sidebar-header">Ocean View Resort</div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-item">Dashboard Overview</a>
+                <a href="guests.html" class="nav-item">Guest Management</a>
+                <a href="rooms.html" class="nav-item">Room Status</a>
+                <a href="reservations.html" class="nav-item active">Reservations</a>
+            </nav>
+            <div class="sidebar-footer">
+                <button class="btn btn-sm" style="width:100%" onclick="logout()">Logout</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="top-bar">
+                <h2>Reservation Management</h2>
+                <button class="btn btn-sm btn-accent" onclick="showModal()">+ New Booking</button>
+            </div>
+
+            <div class="card">
+                <h3>All Reservations</h3>
+                <div id="statusMsg" class="alert" style="display: none;"></div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Res #</th>
+                                <th>Guest ID</th>
+                                <th>Room</th>
+                                <th>Stay Dates</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="resTableBody">
+                            <tr>
+                                <td colspan="6" style="text-align: center; padding: 2rem;">Loading reservations...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Booking Modal -->
+    <div id="resModal"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+        <div class="card" style="width: 500px; position: relative;">
+            <button onclick="hideModal()"
+                style="position: absolute; right: 2rem; top: 2rem; border: none; background: none; cursor: pointer; font-size: 1.5rem;">&times;</button>
+            <h3>New Reservation</h3>
+            <form id="resForm">
+                <input type="hidden" name="action" value="book">
+                <div class="form-group">
+                    <label>Guest ID</label>
+                    <input type="number" name="guestId" required>
+                </div>
+                <div class="form-group">
+                    <label>Select Room</label>
+                    <select name="roomNumber" id="roomSelect" required onchange="calculateCost()">
+                        <option value="">Select Room</option>
+                    </select>
+                </div>
+                <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label>Check-in</label>
+                        <input type="date" name="checkIn" id="checkIn" required onchange="calculateCost()">
+                    </div>
+                    <div class="form-group">
+                        <label>Check-out</label>
+                        <input type="date" name="checkOut" id="checkOut" required onchange="calculateCost()">
+                    </div>
+                </div>
+                <div id="estimateSection" class="alert alert-success"
+                    style="display: none; margin-bottom: 1rem; padding: 0.5rem;">
+                    <strong>Estimated Bill:</strong> <span id="estimateVal">$0.00</span>
+                    <br><small id="nightBasis">(0 nights x $0.00)</small>
+                </div>
+                <button type="submit" class="btn" style="width: 100%;">Confirm Booking</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let roomData = [];
+
+        function showModal() { document.getElementById('resModal').style.display = 'flex'; loadRooms(); }
+        function hideModal() { document.getElementById('resModal').style.display = 'none'; }
+
+        async function logout() {
+            await fetch('../logout');
+            window.location.href = '../index.html';
+        }
+
+        async function loadRooms() {
+            try {
+                const response = await fetch('../room');
+                roomData = await response.json();
+                const select = document.getElementById('roomSelect');
+                select.innerHTML = '<option value="">Select Room</option>';
+                roomData.filter(r => r.status === 'AVAILABLE').forEach(room => {
+                    const opt = document.createElement('option');
+                    opt.value = room.roomNumber;
+                    opt.textContent = `${room.roomNumber} - ${room.type} ($${room.rate}/n)`;
+                    select.appendChild(opt);
+                });
+            } catch (error) { console.error(error); }
+        }
+
+        function calculateCost() {
+            const roomNumber = document.getElementById('roomSelect').value;
+            const checkIn = document.getElementById('checkIn').value;
+            const checkOut = document.getElementById('checkOut').value;
+            const estimateSection = document.getElementById('estimateSection');
+            if (roomNumber && checkIn && checkOut) {
+                const room = roomData.find(r => r.roomNumber === roomNumber);
+                const d1 = new Date(checkIn); const d2 = new Date(checkOut);
+                if (d2 > d1) {
+                    const diffDays = Math.ceil(Math.abs(d2 - d1) / (1000 * 60 * 60 * 24));
+                    const total = diffDays * room.rate;
+                    document.getElementById('estimateVal').textContent = `$${total.toFixed(2)}`;
+                    document.getElementById('nightBasis').textContent = `(${diffDays} nights x $${room.rate.toFixed(2)})`;
+                    estimateSection.style.display = 'block';
+                } else { estimateSection.style.display = 'none'; }
+            } else { estimateSection.style.display = 'none'; }
+        }
+
+        async function loadReservations() {
+            try {
+                const response = await fetch('../reservation?action=getAll');
+                const data = await response.json();
+                const tbody = document.getElementById('resTableBody');
+                tbody.innerHTML = data.length === 0 ? '<tr><td colspan="6" style="text-align: center; padding: 2rem;">No reservations found.</td></tr>' : '';
+                data.forEach(res => {
+                    const tr = document.createElement('tr');
+                    const isCheckedOut = res.status === 'CHECKED_OUT';
+                    tr.innerHTML = `
+                        <td><strong>${res.reservationNumber}</strong></td>
+                        <td>#${res.guestId}</td>
+                        <td>${res.roomNumber}</td>
+                        <td><small>${res.checkInDate} to ${res.checkOutDate}</small></td>
+                        <td>$${res.totalCost.toFixed(2)}</td>
+                        <td><span class="status-badge ${isCheckedOut ? 'status-available' : 'status-occupied'}">${res.status}</span></td>
+                        <td>
+                            ${!isCheckedOut ? `<button class="btn btn-sm" onclick="checkOut('${res.reservationNumber}')">Check Out</button>` : `<button class="btn btn-accent btn-sm" onclick="viewBill('${res.reservationNumber}')">View Bill</button>`}
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (error) { console.error(error); }
+        }
+
+        async function checkOut(resNo) {
+            if (!confirm('Are you sure you want to check out this guest?')) return;
+            try {
+                const response = await fetch('../reservation', {
+                    method: 'POST',
+                    body: new URLSearchParams({ action: 'checkout', resNo: resNo }),
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+                });
+                const result = await response.json();
+                if (result.success) {
+                    alert('Check-out successful!');
+                    window.open(`bill.html?resNo=${resNo}`, '_blank');
+                    loadReservations();
+                } else { alert(result.message); }
+            } catch (error) { alert('Error during check-out'); }
+        }
+
+        function viewBill(resNo) {
+            window.open(`bill.html?resNo=${resNo}`, '_blank');
+        }
+
+        document.getElementById('resForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new URLSearchParams(new FormData(e.target));
+            try {
+                const response = await fetch('../reservation', {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+                });
+                const result = await response.json();
+                if (result.success) {
+                    hideModal();
+                    alert('Booking Confirmed! Res #: ' + result.reservationNumber);
+                    loadReservations();
+                } else { alert(result.message); }
+            } catch (error) { alert('Error creating booking'); }
+        });
+
+        loadReservations();
+    </script>
+</body>
+
+</html>

@@ -31,7 +31,7 @@ public class ReservationDAO {
 
     public List<Reservation> getAllReservations() throws SQLException {
         List<Reservation> reservations = new ArrayList<>();
-        String sql = "SELECT * FROM reservations";
+        String sql = "SELECT * FROM reservations ORDER BY reservation_number DESC";
         try (Connection conn = DBConnection.getInstance().getConnection();
                 Statement stmt = conn.createStatement();
                 ResultSet rs = stmt.executeQuery(sql)) {
@@ -59,5 +59,53 @@ public class ReservationDAO {
             }
         }
         return 0;
+    }
+
+    public boolean updateReservationStatus(String resNo, String status) throws SQLException {
+        String sql = "UPDATE reservations SET status = ? WHERE reservation_number = ?";
+        try (Connection conn = DBConnection.getInstance().getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, status);
+            stmt.setString(2, resNo);
+            int result = stmt.executeUpdate();
+            if (result > 0) {
+                if ("CHECKED_OUT".equals(status)) {
+                    // Find the room for this reservation to make it AVAILABLE
+                    String getRoomSql = "SELECT room_number FROM reservations WHERE reservation_number = ?";
+                    try (PreparedStatement getRoomStmt = conn.prepareStatement(getRoomSql)) {
+                        getRoomStmt.setString(1, resNo);
+                        try (ResultSet rs = getRoomStmt.executeQuery()) {
+                            if (rs.next()) {
+                                String roomNumber = rs.getString("room_number");
+                                new RoomDAO().updateRoomStatus(roomNumber, "AVAILABLE");
+                            }
+                        }
+                    }
+                }
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public Reservation getReservationByNumber(String resNo) throws SQLException {
+        String sql = "SELECT * FROM reservations WHERE reservation_number = ?";
+        try (Connection conn = DBConnection.getInstance().getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, resNo);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return new Reservation(
+                            rs.getString("reservation_number"),
+                            rs.getInt("guest_id"),
+                            rs.getString("room_number"),
+                            rs.getDate("check_in_date"),
+                            rs.getDate("check_out_date"),
+                            rs.getDouble("total_cost"),
+                            rs.getString("status"));
+                }
+            }
+        }
+        return null;
     }
 }

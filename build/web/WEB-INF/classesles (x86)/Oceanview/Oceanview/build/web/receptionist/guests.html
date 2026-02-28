@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guest Management | Ocean View Resort</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body>
+    <div class="layout-wrapper">
+        <aside class="sidebar">
+            <div class="sidebar-header">Ocean View Resort</div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-item">Dashboard Overview</a>
+                <a href="guests.html" class="nav-item active">Guest Management</a>
+                <a href="rooms.html" class="nav-item">Room Status</a>
+                <a href="reservations.html" class="nav-item">Reservations</a>
+            </nav>
+            <div class="sidebar-footer">
+                <button class="btn btn-sm" style="width:100%" onclick="logout()">Logout</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="top-bar">
+                <h2>Guest Management</h2>
+                <button class="btn btn-sm btn-accent" onclick="showModal()">+ Register Guest</button>
+            </div>
+
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h3>All Guests</h3>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <input type="text" id="searchInput" placeholder="Search by name or ID card..."
+                            style="width: 300px;">
+                        <button class="btn btn-sm" onclick="searchGuests()">Search</button>
+                        <button class="btn btn-sm btn-accent" onclick="loadGuests()">Reset</button>
+                    </div>
+                </div>
+
+                <div id="statusMsg" class="alert" style="display: none;"></div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Contact</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="guestTableBody">
+                            <tr>
+                                <td colspan="5" style="text-align: center; padding: 2rem;">Loading guests...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Registration Modal (Simple Overlay) -->
+    <div id="regModal"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+        <div class="card" style="width: 500px; position: relative;">
+            <button onclick="hideModal()"
+                style="position: absolute; right: 2rem; top: 2rem; border: none; background: none; cursor: pointer; font-size: 1.5rem;">&times;</button>
+            <h3>Register New Guest</h3>
+            <form id="guestForm">
+                <input type="hidden" name="action" value="register">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" name="name" required>
+                </div>
+                <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label>ID/Passport #</label>
+                        <input type="text" name="idCard" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Phone</label>
+                        <input type="text" name="contact" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label>Address</label>
+                    <textarea name="address" rows="2" required></textarea>
+                </div>
+                <button type="submit" class="btn" style="width: 100%;">Complete Registration</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function showModal() { document.getElementById('regModal').style.display = 'flex'; }
+        function hideModal() { document.getElementById('regModal').style.display = 'none'; }
+
+        async function logout() {
+            await fetch('../logout');
+            window.location.href = '../index.html';
+        }
+
+        async function loadGuests() {
+            document.getElementById('searchInput').value = '';
+            try {
+                const response = await fetch('../guest');
+                const data = await response.json();
+                renderGuests(data);
+            } catch (error) { console.error(error); }
+        }
+
+        async function searchGuests() {
+            const query = document.getElementById('searchInput').value;
+            if (!query) return;
+            try {
+                const response = await fetch(`../guest?query=${encodeURIComponent(query)}`);
+                const data = await response.json();
+                renderGuests(data);
+            } catch (error) { console.error(error); }
+        }
+
+        function renderGuests(guests) {
+            const tbody = document.getElementById('guestTableBody');
+            tbody.innerHTML = guests.length === 0 ? '<tr><td colspan="5" style="text-align: center; padding: 2rem;">No guests found.</td></tr>' : '';
+            guests.forEach(guest => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>#${guest.id}</td>
+                    <td>${guest.name}</td>
+                    <td>${guest.email}</td>
+                    <td>${guest.contact}</td>
+                    <td>
+                        <button class="btn btn-accent btn-sm" onclick="window.open('guest_view.html?id=${guest.id}', '_blank')">View</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        document.getElementById('guestForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new URLSearchParams(new FormData(e.target));
+            try {
+                const response = await fetch('../guest', {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+                });
+                const result = await response.json();
+                if (result.success) {
+                    hideModal();
+                    e.target.reset();
+                    loadGuests();
+                } else {
+                    alert(result.message);
+                }
+            } catch (error) { alert('Error registering guest'); }
+        });
+
+        loadGuests();
+    </script>
+</body>
+
+</html>

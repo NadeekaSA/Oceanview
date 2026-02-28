@@ -9,257 +9,131 @@
 </head>
 
 <body>
-    <header>
-        <div class="logo">Ocean View Resort</div>
-        <nav>
-            <button class="btn btn-accent" onclick="logout()">Logout</button>
-        </nav>
-    </header>
+    <div class="layout-wrapper">
+        <aside class="sidebar">
+            <div class="sidebar-header">Ocean View Resort</div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-item active">Dashboard Overview</a>
+                <a href="guests.html" class="nav-item">Guest Management</a>
+                <a href="rooms.html" class="nav-item">Room Status</a>
+                <a href="reservations.html" class="nav-item">Reservations</a>
+            </nav>
+            <div class="sidebar-footer">
+                <button class="btn btn-sm" style="width:100%" onclick="logout()">Logout</button>
+            </div>
+        </aside>
 
-    <div class="container text-center">
-        <h1 style="margin-bottom: 2rem;">Receptionist Dashboard</h1>
-
-        <div class="grid">
-            <!-- Guest Registration -->
-            <div class="card">
-                <h3>Register New Guest</h3>
-                <form id="guestForm">
-                    <input type="hidden" name="action" value="register">
-                    <div class="form-group">
-                        <input type="text" name="name" placeholder="Full Name" required>
-                    </div>
-                    <div class="form-group">
-                        <input type="text" name="address" placeholder="Address" required>
-                    </div>
-                    <div class="form-group">
-                        <input type="text" name="contact" placeholder="Contact Number" required>
-                    </div>
-                    <div class="form-group">
-                        <input type="email" name="email" placeholder="Email Address" required>
-                    </div>
-                    <div class="form-group">
-                        <input type="text" name="idCard" placeholder="ID Card Number" required>
-                    </div>
-                    <button type="submit" class="btn" style="width: 100%;">Register Guest</button>
-                </form>
+        <main class="main-content">
+            <div class="top-bar">
+                <h2 id="viewTitle">Dashboard Overview</h2>
+                <div class="user-info">Logged in as: <strong>Receptionist</strong></div>
             </div>
 
-            <!-- Room Booking -->
-            <div class="card">
-                <h3>New Reservation</h3>
-                <form id="resForm">
-                    <input type="hidden" name="action" value="book">
-                    <div class="form-group">
-                        <input type="number" name="guestId" placeholder="Guest ID" required>
+            <div class="grid">
+                <div class="card">
+                    <h3>At a Glance</h3>
+                    <div id="statsRow"
+                        style="display: flex; gap: 2rem; justify-content: space-around; text-align: center;">
+                        <div>
+                            <h1 id="statAvailable">--</h1><small>Available Rooms</small>
+                        </div>
+                        <div>
+                            <h1 id="statOccupied">--</h1><small>Occupied Rooms</small>
+                        </div>
+                        <div>
+                            <h1 id="statTotalRes">--</h1><small>Active Bookings</small>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <select name="roomNumber" id="roomSelect" required onchange="calculateCost()">
-                            <option value="">Select Room</option>
-                            <!-- Populated dynamically -->
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Check-in Date</label>
-                        <input type="date" name="checkIn" id="checkIn" required onchange="calculateCost()">
-                    </div>
-                    <div class="form-group">
-                        <label>Check-out Date</label>
-                        <input type="date" name="checkOut" id="checkOut" required onchange="calculateCost()">
-                    </div>
-                    <div id="estimateSection" class="alert alert-success"
-                        style="display: none; margin-bottom: 1rem; padding: 0.5rem;">
-                        <strong>Estimated Bill:</strong> <span id="estimateVal">$0.00</span>
-                        <br><small id="nightBasis">(0 nights x $0.00)</small>
-                    </div>
-                    <button type="submit" class="btn btn-accent" style="width: 100%;">Create Booking</button>
-                </form>
-            </div>
-        </div>
+                </div>
 
-        <!-- Guest List -->
-        <div class="card" style="margin-top: 2rem;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                <h3 style="margin: 0;">Recent Guests</h3>
-                <div style="display: flex; gap: 0.5rem;">
-                    <input type="text" id="searchInput" placeholder="Search by name or ID card..."
-                        style="padding: 0.5rem; border-radius: 4px; border: 1px solid #ddd; width: 250px;">
-                    <button class="btn btn-sm" onclick="searchGuests()">Search</button>
-                    <button class="btn btn-sm btn-accent" onclick="loadGuests()">Reset</button>
+                <div class="card">
+                    <h3>Quick Actions</h3>
+                    <div style="display: flex; flex-direction: column; gap: 1rem;">
+                        <a href="guests.html" class="btn">Register New Guest</a>
+                        <a href="reservations.html" class="btn btn-accent">New Reservation</a>
+                    </div>
                 </div>
             </div>
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Contact</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="guestTableBody">
-                        <!-- Populated by JS -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
 
-        <div id="statusMsg" class="alert" style="display: none; margin-top: 2rem;"></div>
+            <div class="card" style="margin-top: 2rem;">
+                <h3>Today's Activity</h3>
+                <div id="statusMsg" class="alert" style="display: none;"></div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Res #</th>
+                                <th>Guest</th>
+                                <th>Room</th>
+                                <th>Stay Dates</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="todayResBody">
+                            <tr>
+                                <td colspan="6" style="text-align center; padding: 2rem;">Loading today's activity...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
     </div>
 
     <script>
-        let roomData = [];
-
         async function logout() {
             await fetch('../logout');
             window.location.href = '../index.html';
         }
 
-        async function loadRooms() {
+        async function loadOverview() {
             try {
-                const response = await fetch('../room');
-                roomData = await response.json();
-                const select = document.getElementById('roomSelect');
-                select.innerHTML = '<option value="">Select Room</option>';
+                // Fetch stats from ReportServlet
+                const reportResp = await fetch('../admin/reports'); // Reusing existing report logic for stats
+                const stats = await reportResp.json();
 
-                roomData.filter(r => r.status === 'AVAILABLE').forEach(room => {
-                    const opt = document.createElement('option');
-                    opt.value = room.roomNumber;
-                    opt.textContent = `${room.roomNumber} - ${room.type} ($${room.rate}/night)`;
-                    select.appendChild(opt);
+                document.getElementById('statAvailable').textContent = stats.occupancy.available;
+                document.getElementById('statOccupied').textContent = stats.occupancy.occupied;
+
+                // Fetch reservations
+                const resResp = await fetch('../reservation?action=getAll'); // Simplified GET for all
+                const reservations = await resResp.json();
+
+                // Fix: Only count CHECKED_IN as active bookings
+                const activeCount = reservations.filter(r => r.status === 'CHECKED_IN').length;
+                document.getElementById('statTotalRes').textContent = activeCount;
+
+                const tbody = document.getElementById('todayResBody');
+                tbody.innerHTML = '';
+
+                if (reservations.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #666; padding: 2rem;">No recent bookings.</td></tr>';
+                    return;
+                }
+
+                // Show last 5
+                reservations.slice(0, 5).forEach(res => {
+                    const tr = document.createElement('tr');
+                    const isCheckedOut = res.status === 'CHECKED_OUT';
+                    tr.innerHTML = `
+                        <td><strong>${res.reservationNumber}</strong></td>
+                        <td>Guest #${res.guestId}</td>
+                        <td>${res.roomNumber}</td>
+                        <td><small>${res.checkInDate} to ${res.checkOutDate}</small></td>
+                        <td>$${res.totalCost.toFixed(2)}</td>
+                        <td><span class="status-badge ${isCheckedOut ? 'status-available' : 'status-occupied'}">${res.status}</span></td>
+                    `;
+                    tbody.appendChild(tr);
                 });
+
             } catch (error) {
-                console.error('Error loading rooms:', error);
+                console.error('Error loading overview:', error);
             }
         }
 
-        function calculateCost() {
-            const roomNumber = document.getElementById('roomSelect').value;
-            const checkIn = document.getElementById('checkIn').value;
-            const checkOut = document.getElementById('checkOut').value;
-            const estimateSection = document.getElementById('estimateSection');
-
-            if (roomNumber && checkIn && checkOut) {
-                const room = roomData.find(r => r.roomNumber === roomNumber);
-                const d1 = new Date(checkIn);
-                const d2 = new Date(checkOut);
-
-                if (d2 > d1) {
-                    const diffTime = Math.abs(d2 - d1);
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                    const total = diffDays * room.rate;
-
-                    document.getElementById('estimateVal').textContent = `$${total.toFixed(2)}`;
-                    document.getElementById('nightBasis').textContent = `(${diffDays} nights x $${room.rate.toFixed(2)})`;
-                    estimateSection.style.display = 'block';
-                } else {
-                    estimateSection.style.display = 'none';
-                }
-            } else {
-                estimateSection.style.display = 'none';
-            }
-        }
-
-        async function loadGuests() {
-            document.getElementById('searchInput').value = '';
-            try {
-                const response = await fetch('../guest');
-                const data = await response.json();
-                if (Array.isArray(data)) {
-                    renderGuests(data);
-                } else {
-                    showStatus(data.message || "Error loading guests", false);
-                }
-            } catch (error) {
-                console.error('Error loading guests:', error);
-                showStatus("Connection error while loading guests", false);
-            }
-        }
-
-        async function searchGuests() {
-            const query = document.getElementById('searchInput').value;
-            if (!query) return;
-            try {
-                const response = await fetch(`../guest?query=${encodeURIComponent(query)}`);
-                const data = await response.json();
-                if (Array.isArray(data)) {
-                    renderGuests(data);
-                } else {
-                    showStatus(data.message || "Search failed", false);
-                }
-            } catch (error) {
-                console.error('Error searching guests:', error);
-                showStatus("Connection error while searching", false);
-            }
-        }
-
-        function renderGuests(guests) {
-            const tbody = document.getElementById('guestTableBody');
-            tbody.innerHTML = '';
-
-            if (guests.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #666; padding: 2rem;">No guests found.</td></tr>';
-                return;
-            }
-
-            guests.forEach(guest => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>#${guest.id}</td>
-                    <td>${guest.name}</td>
-                    <td>${guest.email}</td>
-                    <td>${guest.contact}</td>
-                    <td>
-                        <button class="btn btn-accent btn-sm" onclick="viewGuest(${guest.id})">View Details</button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        function showStatus(msg, success) {
-            const statusMsg = document.getElementById('statusMsg');
-            statusMsg.textContent = msg;
-            statusMsg.className = `alert ${success ? 'alert-success' : 'alert-error'}`;
-            statusMsg.style.display = 'block';
-            setTimeout(() => { statusMsg.style.display = 'none'; }, 5000);
-        }
-
-        function viewGuest(id) {
-            window.open(`guest_view.html?id=${id}`, '_blank');
-        }
-
-        async function handleForm(formId, url) {
-            document.getElementById(formId).addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const formData = new URLSearchParams(new FormData(e.target));
-                const statusMsg = document.getElementById('statusMsg');
-
-                try {
-                    const response = await fetch(url, {
-                        method: 'POST',
-                        body: formData,
-                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-                    });
-                    const result = await response.json();
-                    showStatus(result.message || (result.success ? "Operation Successful" : "Operation Failed"), result.success);
-                    if (result.success) {
-                        e.target.reset();
-                        loadGuests(); // Refresh list on new registration
-                        loadRooms(); // Refresh available rooms
-                        document.getElementById('estimateSection').style.display = 'none';
-                    }
-                } catch (error) {
-                    showStatus('Connection Error', false);
-                }
-            });
-        }
-
-        handleForm('guestForm', '../guest');
-        handleForm('resForm', '../reservation');
-        loadGuests();
-        loadRooms();
+        loadOverview();
     </script>
 </body>
 
