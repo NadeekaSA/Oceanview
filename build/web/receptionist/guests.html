@@ -48,6 +48,7 @@
                             <tr>
                                 <th>ID</th>
                                 <th>Name</th>
+                                <th>ID/Passport</th>
                                 <th>Email</th>
                                 <th>Contact</th>
                                 <th>Action</th>
@@ -55,7 +56,7 @@
                         </thead>
                         <tbody id="guestTableBody">
                             <tr>
-                                <td colspan="5" style="text-align: center; padding: 2rem;">Loading guests...</td>
+                                <td colspan="6" style="text-align: center; padding: 2rem;">Loading guests...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -64,48 +65,77 @@
         </main>
     </div>
 
-    <!-- Registration Modal (Simple Overlay) -->
+    <!-- Registration/Edit Modal -->
     <div id="regModal"
         style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
         <div class="card" style="width: 500px; position: relative;">
             <button onclick="hideModal()"
                 style="position: absolute; right: 2rem; top: 2rem; border: none; background: none; cursor: pointer; font-size: 1.5rem;">&times;</button>
-            <h3>Register New Guest</h3>
+            <h3 id="modalTitle">Register New Guest</h3>
             <form id="guestForm">
-                <input type="hidden" name="action" value="register">
+                <input type="hidden" name="action" id="formAction" value="register">
+                <input type="hidden" name="id" id="guestId">
                 <div class="form-group">
                     <label>Full Name</label>
-                    <input type="text" name="name" required>
+                    <input type="text" name="name" id="guestName" required>
                 </div>
                 <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 1rem;">
                     <div class="form-group">
                         <label>ID/Passport #</label>
-                        <input type="text" name="idCard" required>
+                        <input type="text" name="idCard" id="guestIdCard" required>
                     </div>
                     <div class="form-group">
                         <label>Phone</label>
-                        <input type="text" name="contact" required>
+                        <input type="text" name="contact" id="guestContact" required>
                     </div>
                 </div>
                 <div class="form-group">
                     <label>Email</label>
-                    <input type="email" name="email" required>
+                    <input type="email" name="email" id="guestEmail" required>
                 </div>
                 <div class="form-group">
                     <label>Address</label>
-                    <textarea name="address" rows="2" required></textarea>
+                    <textarea name="address" id="guestAddress" rows="2" required></textarea>
                 </div>
-                <button type="submit" class="btn" style="width: 100%;">Complete Registration</button>
+                <button type="submit" class="btn" style="width: 100%;" id="submitBtn">Complete Registration</button>
             </form>
         </div>
     </div>
 
     <script>
-        function showModal() { document.getElementById('regModal').style.display = 'flex'; }
+        function showModal(isEdit = false, guest = null) {
+            const modal = document.getElementById('regModal');
+            const title = document.getElementById('modalTitle');
+            const action = document.getElementById('formAction');
+            const submitBtn = document.getElementById('submitBtn');
+            const idInput = document.getElementById('guestId');
+
+            if (isEdit && guest) {
+                title.textContent = 'Edit Guest Details';
+                action.value = 'update';
+                submitBtn.textContent = 'Save Changes';
+                idInput.value = guest.id;
+                document.getElementById('guestName').value = guest.name;
+                document.getElementById('guestIdCard').value = guest.idCardNumber;
+                document.getElementById('guestContact').value = guest.contact;
+                document.getElementById('guestEmail').value = guest.email;
+                document.getElementById('guestAddress').value = guest.address;
+            } else {
+                title.textContent = 'Register New Guest';
+                action.value = 'register';
+                submitBtn.textContent = 'Complete Registration';
+                idInput.value = '';
+                document.getElementById('guestForm').reset();
+            }
+            modal.style.display = 'flex';
+        }
+
         function hideModal() { document.getElementById('regModal').style.display = 'none'; }
     </script>
     <script src="../js/help_manager.js"></script>
     <script>
+        let allGuests = [];
+
         async function logout() {
             await fetch('../logout');
             window.location.href = '../index.html';
@@ -115,8 +145,8 @@
             document.getElementById('searchInput').value = '';
             try {
                 const response = await fetch('../guest');
-                const data = await response.json();
-                renderGuests(data);
+                allGuests = await response.json();
+                renderGuests(allGuests);
             } catch (error) { console.error(error); }
         }
 
@@ -132,20 +162,44 @@
 
         function renderGuests(guests) {
             const tbody = document.getElementById('guestTableBody');
-            tbody.innerHTML = guests.length === 0 ? '<tr><td colspan="5" style="text-align: center; padding: 2rem;">No guests found.</td></tr>' : '';
+            tbody.innerHTML = guests.length === 0 ? '<tr><td colspan="6" style="text-align: center; padding: 2rem;">No guests found.</td></tr>' : '';
             guests.forEach(guest => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td>#${guest.id}</td>
                     <td>${guest.name}</td>
+                    <td>${guest.idCardNumber || '-'}</td>
                     <td>${guest.email}</td>
                     <td>${guest.contact}</td>
-                    <td>
-                        <button class="btn btn-accent btn-sm" onclick="window.open('guest_view.html?id=${guest.id}', '_blank')">View</button>
+                    <td style="display: flex; gap: 0.5rem;">
+                        <button class="btn btn-sm" onclick='prepareEdit(${JSON.stringify(guest).replace(/'/g, "&apos;")})'>Edit</button>
+                        <button class="btn btn-accent btn-sm" onclick="deleteGuest(${guest.id})">Delete</button>
+                        <button class="btn btn-sm" style="background: #666;" onclick="window.open('guest_view.html?id=${guest.id}', '_blank')">View</button>
                     </td>
                 `;
                 tbody.appendChild(tr);
             });
+        }
+
+        function prepareEdit(guest) {
+            showModal(true, guest);
+        }
+
+        async function deleteGuest(id) {
+            if (!confirm('Are you sure you want to delete this guest? This action cannot be undone.')) return;
+            try {
+                const response = await fetch('../guest', {
+                    method: 'POST',
+                    body: new URLSearchParams({ action: 'delete', id: id }),
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+                });
+                const result = await response.json();
+                if (result.success) {
+                    loadGuests();
+                } else {
+                    alert(result.message);
+                }
+            } catch (error) { alert('Error deleting guest'); }
         }
 
         document.getElementById('guestForm').addEventListener('submit', async (e) => {
@@ -160,15 +214,16 @@
                 const result = await response.json();
                 if (result.success) {
                     hideModal();
-                    e.target.reset();
+                    alert(result.message);
                     loadGuests();
                 } else {
                     alert(result.message);
                 }
-            } catch (error) { alert('Error registering guest'); }
+            } catch (error) { alert('Error processing request'); }
         });
 
         loadGuests();
+        initHelp('guests');
     </script>
 </body>
 

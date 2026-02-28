@@ -144,6 +144,47 @@ public class ReservationServlet extends HttpServlet {
                     response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                     response.getWriter().write("{\"success\": false, \"message\": \"Check-out failed\"}");
                 }
+            } else if ("cancel".equals(action)) {
+                String resNo = request.getParameter("resNo");
+                if (reservationDAO.cancelReservation(resNo)) {
+                    response.getWriter()
+                            .write("{\"success\": true, \"message\": \"Reservation cancelled successfully\"}");
+                } else {
+                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                    response.getWriter().write("{\"success\": false, \"message\": \"Cancel failed\"}");
+                }
+            } else if ("update".equals(action)) {
+                String resNo = request.getParameter("resNo");
+                String roomNumber = request.getParameter("roomNumber");
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+                Date checkIn = sdf.parse(request.getParameter("checkIn"));
+                Date checkOut = sdf.parse(request.getParameter("checkOut"));
+
+                // Recalculate cost
+                long diffInMillies = Math.abs(checkOut.getTime() - checkIn.getTime());
+                long diff = diffInMillies / (1000 * 60 * 60 * 24);
+                if (diff == 0)
+                    diff = 1;
+
+                double rate = 0;
+                List<Room> rooms = roomDAO.getAllRooms();
+                for (Room r : rooms) {
+                    if (r.getRoomNumber().equals(roomNumber)) {
+                        rate = r.getRate();
+                        break;
+                    }
+                }
+                double totalCost = diff * rate;
+
+                Reservation res = new Reservation(resNo, 0, roomNumber, checkIn, checkOut, totalCost, "");
+                if (reservationDAO.updateReservation(res)) {
+                    response.getWriter().write(
+                            "{\"success\": true, \"message\": \"Reservation updated successfully\", \"totalCost\": "
+                                    + totalCost + "}");
+                } else {
+                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                    response.getWriter().write("{\"success\": false, \"message\": \"Update failed\"}");
+                }
             }
         } catch (SQLException | ParseException e) {
             e.printStackTrace();

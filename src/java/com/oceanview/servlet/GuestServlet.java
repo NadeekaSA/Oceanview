@@ -84,15 +84,15 @@ public class GuestServlet extends HttpServlet {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         String action = request.getParameter("action");
-        if ("register".equals(action)) {
-            String name = request.getParameter("name");
-            String address = request.getParameter("address");
-            String contact = request.getParameter("contact");
-            String email = request.getParameter("email");
-            String idCard = request.getParameter("idCard");
+        try {
+            if ("register".equals(action)) {
+                String name = request.getParameter("name");
+                String address = request.getParameter("address");
+                String contact = request.getParameter("contact");
+                String email = request.getParameter("email");
+                String idCard = request.getParameter("idCard");
 
-            Guest guest = new Guest(0, name, address, contact, email, idCard);
-            try {
+                Guest guest = new Guest(0, name, address, contact, email, idCard);
                 if (guestDAO.addGuest(guest)) {
                     response.getWriter()
                             .write("{\"success\": true, \"message\": \"Guest registered successfully\", \"id\":"
@@ -101,12 +101,37 @@ public class GuestServlet extends HttpServlet {
                     response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                     response.getWriter().write("{\"success\": false, \"message\": \"Failed to register guest\"}");
                 }
-            } catch (SQLException e) {
-                e.printStackTrace();
-                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                response.getWriter()
-                        .write("{\"success\": false, \"message\": \"Database error: " + e.getMessage() + "\"}");
+            } else if ("update".equals(action)) {
+                int id = Integer.parseInt(request.getParameter("id"));
+                String name = request.getParameter("name");
+                String address = request.getParameter("address");
+                String contact = request.getParameter("contact");
+                String email = request.getParameter("email");
+                String idCard = request.getParameter("idCard");
+
+                Guest guest = new Guest(id, name, address, contact, email, idCard);
+                if (guestDAO.updateGuest(guest)) {
+                    response.getWriter().write("{\"success\": true, \"message\": \"Guest updated successfully\"}");
+                } else {
+                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                    response.getWriter().write("{\"success\": false, \"message\": \"Failed to update guest\"}");
+                }
+            } else if ("delete".equals(action)) {
+                int id = Integer.parseInt(request.getParameter("id"));
+                if (guestDAO.deleteGuest(id)) {
+                    response.getWriter().write("{\"success\": true, \"message\": \"Guest deleted successfully\"}");
+                } else {
+                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                    response.getWriter().write("{\"success\": false, \"message\": \"Failed to delete guest\"}");
+                }
             }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            response.getWriter().write("{\"success\": false, \"message\": \"Database error: " + e.getMessage() + "\"}");
+        } catch (NumberFormatException e) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            response.getWriter().write("{\"success\": false, \"message\": \"Invalid ID format\"}");
         }
     }
 }

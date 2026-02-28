@@ -90,4 +90,27 @@ public class GuestDAO {
         }
         return null;
     }
+
+    public boolean updateGuest(Guest guest) throws SQLException {
+        String sql = "UPDATE guests SET name = ?, address = ?, contact = ?, email = ?, id_card_number = ? WHERE id = ?";
+        try (Connection conn = DBConnection.getInstance().getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, guest.getName());
+            stmt.setString(2, guest.getAddress());
+            stmt.setString(3, guest.getContact());
+            stmt.setString(4, guest.getEmail());
+            stmt.setString(5, guest.getIdCardNumber());
+            stmt.setInt(6, guest.getId());
+            return stmt.executeUpdate() > 0;
+        }
+    }
+
+    public boolean deleteGuest(int id) throws SQLException {
+        String sql = "DELETE FROM guests WHERE id = ?";
+        try (Connection conn = DBConnection.getInstance().getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, id);
+            return stmt.executeUpdate() > 0;
+        }
+    }
 }

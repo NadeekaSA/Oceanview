@@ -145,4 +145,40 @@ public class ReservationDAO {
         }
         return null;
     }
+
+    public boolean cancelReservation(String resNo) throws SQLException {
+        String sql = "UPDATE reservations SET status = 'CANCELLED' WHERE reservation_number = ?";
+        try (Connection conn = DBConnection.getInstance().getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, resNo);
+            int result = stmt.executeUpdate();
+            if (result > 0) {
+                // Return room to AVAILABLE
+                String getRoomSql = "SELECT room_number FROM reservations WHERE reservation_number = ?";
+                try (PreparedStatement getRoomStmt = conn.prepareStatement(getRoomSql)) {
+                    getRoomStmt.setString(1, resNo);
+                    try (ResultSet rs = getRoomStmt.executeQuery()) {
+                        if (rs.next()) {
+                            new RoomDAO().updateRoomStatus(rs.getString("room_number"), "AVAILABLE");
+                        }
+                    }
+                }
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean updateReservation(Reservation res) throws SQLException {
+        String sql = "UPDATE reservations SET check_in_date = ?, check_out_date = ?, total_cost = ?, room_number = ? WHERE reservation_number = ?";
+        try (Connection conn = DBConnection.getInstance().getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setDate(1, new java.sql.Date(res.getCheckInDate().getTime()));
+            stmt.setDate(2, new java.sql.Date(res.getCheckOutDate().getTime()));
+            stmt.setDouble(3, res.getTotalCost());
+            stmt.setString(4, res.getRoomNumber());
+            stmt.setString(5, res.getReservationNumber());
+            return stmt.executeUpdate() > 0;
+        }
+    }
 }
