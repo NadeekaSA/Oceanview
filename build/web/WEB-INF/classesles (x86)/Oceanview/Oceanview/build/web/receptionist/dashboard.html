@@ -115,10 +115,15 @@
             document.getElementById('searchInput').value = '';
             try {
                 const response = await fetch('../guest');
-                const guests = await response.json();
-                renderGuests(guests);
+                const data = await response.json();
+                if (Array.isArray(data)) {
+                    renderGuests(data);
+                } else {
+                    showStatus(data.message || "Error loading guests", false);
+                }
             } catch (error) {
                 console.error('Error loading guests:', error);
+                showStatus("Connection error while loading guests", false);
             }
         }
 
@@ -127,16 +132,27 @@
             if (!query) return;
             try {
                 const response = await fetch(`../guest?query=${encodeURIComponent(query)}`);
-                const guests = await response.json();
-                renderGuests(guests);
+                const data = await response.json();
+                if (Array.isArray(data)) {
+                    renderGuests(data);
+                } else {
+                    showStatus(data.message || "Search failed", false);
+                }
             } catch (error) {
                 console.error('Error searching guests:', error);
+                showStatus("Connection error while searching", false);
             }
         }
 
         function renderGuests(guests) {
             const tbody = document.getElementById('guestTableBody');
             tbody.innerHTML = '';
+
+            if (guests.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #666; padding: 2rem;">No guests found.</td></tr>';
+                return;
+            }
+
             guests.forEach(guest => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
@@ -150,6 +166,14 @@
                 `;
                 tbody.appendChild(tr);
             });
+        }
+
+        function showStatus(msg, success) {
+            const statusMsg = document.getElementById('statusMsg');
+            statusMsg.textContent = msg;
+            statusMsg.className = `alert ${success ? 'alert-success' : 'alert-error'}`;
+            statusMsg.style.display = 'block';
+            setTimeout(() => { statusMsg.style.display = 'none'; }, 5000);
         }
 
         function viewGuest(id) {
@@ -169,18 +193,13 @@
                         headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
                     });
                     const result = await response.json();
-
-                    statusMsg.textContent = result.message || (result.success ? "Operation Successful" : "Operation Failed");
-                    statusMsg.className = `alert ${result.success ? 'alert-success' : 'alert-error'}`;
-                    statusMsg.style.display = 'block';
+                    showStatus(result.message || (result.success ? "Operation Successful" : "Operation Failed"), result.success);
                     if (result.success) {
                         e.target.reset();
                         loadGuests(); // Refresh list on new registration
                     }
                 } catch (error) {
-                    statusMsg.textContent = 'Connection Error';
-                    statusMsg.className = 'alert alert-error';
-                    statusMsg.style.display = 'block';
+                    showStatus('Connection Error', false);
                 }
             });
         }

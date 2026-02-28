@@ -19,52 +19,52 @@ public class GuestServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
         String guestIdStr = request.getParameter("id");
+        String query = request.getParameter("query");
 
         try {
-            if (guestIdStr != null) {
+            if (guestIdStr != null && !guestIdStr.isEmpty()) {
                 int id = Integer.parseInt(guestIdStr);
                 Guest guest = guestDAO.getGuestById(id);
                 if (guest != null) {
-                    String json = "{" +
-                            "\"id\":" + guest.getId() + "," +
-                            "\"name\":\"" + guest.getName() + "\"," +
-                            "\"email\":\"" + guest.getEmail() + "\"," +
-                            "\"contact\":\"" + guest.getContact() + "\"," +
-                            "\"idCardNumber\":\"" + guest.getIdCardNumber() + "\"," +
-                            "\"address\":\"" + guest.getAddress() + "\"" +
-                            "}";
-                    response.getWriter().write(json);
+                    response.getWriter().write(serializeGuest(guest));
                 } else {
                     response.setStatus(HttpServletResponse.SC_NOT_FOUND);
                     response.getWriter().write("{\"success\": false, \"message\": \"Guest not found\"}");
                 }
-            } else if (request.getParameter("query") != null) {
-                String query = request.getParameter("query");
+            } else if (query != null && !query.isEmpty()) {
                 List<Guest> guests = guestDAO.searchGuests(query);
-                response.getWriter().write(toJSONList(guests));
+                response.getWriter().write(serializeGuestList(guests));
             } else {
                 List<Guest> guests = guestDAO.getAllGuests();
-                response.getWriter().write(toJSONList(guests));
+                response.getWriter().write(serializeGuestList(guests));
             }
-        } catch (SQLException | NumberFormatException e) {
+        } catch (SQLException e) {
+            e.printStackTrace(); // Log to server console
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            response.getWriter().write("{\"success\": false, \"message\": \"Error retrieving guest data\"}");
+            response.getWriter().write("{\"success\": false, \"message\": \"Database error: " + e.getMessage() + "\"}");
+        } catch (NumberFormatException e) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            response.getWriter().write("{\"success\": false, \"message\": \"Invalid Guest ID format\"}");
         }
     }
 
-    private String toJSONList(List<Guest> guests) {
+    private String serializeGuest(Guest guest) {
+        return "{" +
+                "\"id\":" + guest.getId() + "," +
+                "\"name\":\"" + escapeJson(guest.getName()) + "\"," +
+                "\"email\":\"" + escapeJson(guest.getEmail()) + "\"," +
+                "\"contact\":\"" + escapeJson(guest.getContact()) + "\"," +
+                "\"idCardNumber\":\"" + escapeJson(guest.getIdCardNumber()) + "\"," +
+                "\"address\":\"" + escapeJson(guest.getAddress()) + "\"" +
+                "}";
+    }
+
+    private String serializeGuestList(List<Guest> guests) {
         StringBuilder json = new StringBuilder("[");
         for (int i = 0; i < guests.size(); i++) {
-            Guest g = guests.get(i);
-            json.append("{")
-                    .append("\"id\":").append(g.getId()).append(",")
-                    .append("\"name\":\"").append(g.getName()).append("\",")
-                    .append("\"email\":\"").append(g.getEmail()).append("\",")
-                    .append("\"contact\":\"").append(g.getContact()).append("\",")
-                    .append("\"idCardNumber\":\"").append(g.getIdCardNumber()).append("\",")
-                    .append("\"address\":\"").append(g.getAddress()).append("\"")
-                    .append("}");
+            json.append(serializeGuest(guests.get(i)));
             if (i < guests.size() - 1)
                 json.append(",");
         }
@@ -72,10 +72,17 @@ public class GuestServlet extends HttpServlet {
         return json.toString();
     }
 
+    private String escapeJson(String text) {
+        if (text == null)
+            return "";
+        return text.replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r");
+    }
+
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
         String action = request.getParameter("action");
         if ("register".equals(action)) {
             String name = request.getParameter("name");
@@ -87,14 +94,18 @@ public class GuestServlet extends HttpServlet {
             Guest guest = new Guest(0, name, address, contact, email, idCard);
             try {
                 if (guestDAO.addGuest(guest)) {
-                    response.getWriter().write("{\"success\": true, \"message\": \"Guest registered successfully\"}");
+                    response.getWriter()
+                            .write("{\"success\": true, \"message\": \"Guest registered successfully\", \"id\":"
+                                    + guest.getId() + "}");
                 } else {
                     response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                     response.getWriter().write("{\"success\": false, \"message\": \"Failed to register guest\"}");
                 }
             } catch (SQLException e) {
+                e.printStackTrace();
                 response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                response.getWriter().write("{\"success\": false, \"message\": \"Database error\"}");
+                response.getWriter()
+                        .write("{\"success\": false, \"message\": \"Database error: " + e.getMessage() + "\"}");
             }
         }
     }
