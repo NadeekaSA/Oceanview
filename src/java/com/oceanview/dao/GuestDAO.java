@@ -31,7 +31,7 @@ public class GuestDAO {
 
     public List<Guest> getAllGuests() throws SQLException {
         List<Guest> guests = new ArrayList<>();
-        String sql = "SELECT * FROM guests";
+        String sql = "SELECT * FROM guests ORDER BY id DESC";
         try (Connection conn = DBConnection.getInstance().getConnection();
                 Statement stmt = conn.createStatement();
                 ResultSet rs = stmt.executeQuery(sql)) {
@@ -46,5 +46,48 @@ public class GuestDAO {
             }
         }
         return guests;
+    }
+
+    public List<Guest> searchGuests(String query) throws SQLException {
+        List<Guest> guests = new ArrayList<>();
+        String sql = "SELECT * FROM guests WHERE name LIKE ? OR id_card_number LIKE ? ORDER BY id DESC";
+        try (Connection conn = DBConnection.getInstance().getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
+            String searchTerm = "%" + query + "%";
+            stmt.setString(1, searchTerm);
+            stmt.setString(2, searchTerm);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    guests.add(new Guest(
+                            rs.getInt("id"),
+                            rs.getString("name"),
+                            rs.getString("address"),
+                            rs.getString("contact"),
+                            rs.getString("email"),
+                            rs.getString("id_card_number")));
+                }
+            }
+        }
+        return guests;
+    }
+
+    public Guest getGuestById(int id) throws SQLException {
+        String sql = "SELECT * FROM guests WHERE id = ?";
+        try (Connection conn = DBConnection.getInstance().getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, id);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return new Guest(
+                            rs.getInt("id"),
+                            rs.getString("name"),
+                            rs.getString("address"),
+                            rs.getString("contact"),
+                            rs.getString("email"),
+                            rs.getString("id_card_number"));
+                }
+            }
+        }
+        return null;
     }
 }

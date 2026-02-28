@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guest Profile | Ocean View Resort</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .profile-avatar {
+            width: 120px;
+            height: 120px;
+            background: var(--secondary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: white;
+            font-weight: bold;
+        }
+
+        .detail-row {
+            display: flex;
+            padding: 1rem 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .detail-label {
+            width: 150px;
+            font-weight: bold;
+            color: #666;
+        }
+
+        .detail-value {
+            flex: 1;
+            color: var(--primary);
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="logo">Ocean View Resort (Guest View)</div>
+        <nav>
+            <button class="btn btn-accent" onclick="window.close()">Close Tab</button>
+        </nav>
+    </header>
+
+    <div class="container">
+        <div id="loading" class="alert">Loading guest details...</div>
+
+        <div id="profileCard" class="card" style="display: none; max-width: 800px; margin: 0 auto;">
+            <div class="profile-header">
+                <div id="avatar" class="profile-avatar">G</div>
+                <div>
+                    <h1 id="guestName" style="margin: 0;">--</h1>
+                    <p id="guestEmail" style="color: #666;">--</p>
+                </div>
+            </div>
+
+            <div class="detail-row">
+                <div class="detail-label">Guest ID</div>
+                <div id="guestId" class="detail-value">--</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Phone</div>
+                <div id="guestPhone" class="detail-value">--</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">ID / Passport</div>
+                <div id="guestIdCard" class="detail-value">--</div>
+            </div>
+            <div class="detail-row" style="border-bottom: none;">
+                <div class="detail-label">Address</div>
+                <div id="guestAddress" class="detail-value">--</div>
+            </div>
+        </div>
+
+        <div id="errorMsg" class="alert alert-error" style="display: none;"></div>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const guestId = urlParams.get('id');
+
+        async function loadGuest() {
+            if (!guestId) {
+                showError("No guest ID provided.");
+                return;
+            }
+
+            try {
+                const response = await fetch(`../guest?id=${guestId}`);
+                if (!response.ok) throw new Error("Guest not found");
+
+                const guest = await response.json();
+
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('profileCard').style.display = 'block';
+
+                document.getElementById('guestName').textContent = guest.name;
+                document.getElementById('guestEmail').textContent = guest.email;
+                document.getElementById('guestId').textContent = `#${guest.id}`;
+                document.getElementById('guestPhone').textContent = guest.contact;
+                document.getElementById('guestIdCard').textContent = guest.idCardNumber;
+                document.getElementById('guestAddress').textContent = guest.address;
+                document.getElementById('avatar').textContent = guest.name.charAt(0).toUpperCase();
+
+            } catch (error) {
+                showError(error.message);
+            }
+        }
+
+        function showError(msg) {
+            document.getElementById('loading').style.display = 'none';
+            const errorMsg = document.getElementById('errorMsg');
+            errorMsg.textContent = msg;
+            errorMsg.style.display = 'block';
+        }
+
+        loadGuest();
+    </script>
+</body>
+
+</html>
