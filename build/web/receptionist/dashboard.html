@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Receptionist Dashboard | Ocean View Resort</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body>
+    <header>
+        <div class="logo">Ocean View Resort</div>
+        <nav>
+            <button class="btn btn-accent" onclick="logout()">Logout</button>
+        </nav>
+    </header>
+
+    <div class="container text-center">
+        <h1 style="margin-bottom: 2rem;">Receptionist Dashboard</h1>
+
+        <div class="grid">
+            <!-- Guest Registration -->
+            <div class="card">
+                <h3>Register New Guest</h3>
+                <form id="guestForm">
+                    <input type="hidden" name="action" value="register">
+                    <div class="form-group">
+                        <input type="text" name="name" placeholder="Full Name" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="text" name="address" placeholder="Address" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="text" name="contact" placeholder="Contact Number" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="email" name="email" placeholder="Email Address" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="text" name="idCard" placeholder="ID Card Number" required>
+                    </div>
+                    <button type="submit" class="btn" style="width: 100%;">Register Guest</button>
+                </form>
+            </div>
+
+            <!-- Room Booking -->
+            <div class="card">
+                <h3>New Reservation</h3>
+                <form id="resForm">
+                    <input type="hidden" name="action" value="book">
+                    <div class="form-group">
+                        <input type="number" name="guestId" placeholder="Guest ID" required>
+                    </div>
+                    <div class="form-group">
+                        <select name="roomNumber" required>
+                            <option value="">Select Room</option>
+                            <option value="101">101 - Single</option>
+                            <option value="102">102 - Double</option>
+                            <option value="201">201 - Suite</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Check-in Date</label>
+                        <input type="date" name="checkIn" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Check-out Date</label>
+                        <input type="date" name="checkOut" required>
+                    </div>
+                    <button type="submit" class="btn btn-accent" style="width: 100%;">Create Booking</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="statusMsg" class="alert" style="display: none; margin-top: 2rem;"></div>
+    </div>
+
+    <script>
+        async function logout() {
+            await fetch('../logout');
+            window.location.href = '../index.html';
+        }
+
+        async function handleForm(formId, url) {
+            document.getElementById(formId).addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new URLSearchParams(new FormData(e.target));
+                const statusMsg = document.getElementById('statusMsg');
+
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        body: formData,
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+                    });
+                    const result = await response.json();
+
+                    statusMsg.textContent = result.message || (result.success ? "Operation Successful" : "Operation Failed");
+                    statusMsg.className = `alert ${result.success ? 'alert-success' : 'alert-error'}`;
+                    statusMsg.style.display = 'block';
+                    if (result.success) e.target.reset();
+                } catch (error) {
+                    statusMsg.textContent = 'Connection Error';
+                    statusMsg.className = 'alert alert-error';
+                    statusMsg.style.display = 'block';
+                }
+            });
+        }
+
+        handleForm('guestForm', '../guest');
+        handleForm('resForm', '../reservation');
+    </script>
+</body>
+
+</html>

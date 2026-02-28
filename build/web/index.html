@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Ocean View Resort</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <div class="login-container">
+        <h2>Ocean View Resort</h2>
+        <p style="text-align: center; color: #666; margin-bottom: 2rem;">Staff Management Portal</p>
+
+        <div id="alertBox" class="alert alert-error" style="display: none;"></div>
+
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <button type="submit" class="btn" style="width: 100%;">Login to Dashboard</button>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new URLSearchParams(new FormData(e.target));
+            const alertBox = document.getElementById('alertBox');
+
+            try {
+                const response = await fetch('login', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    }
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    if (result.role === 'ADMIN') {
+                        window.location.href = 'admin/dashboard.html';
+                    } else {
+                        window.location.href = 'receptionist/dashboard.html';
+                    }
+                } else {
+                    alertBox.textContent = result.message;
+                    alertBox.style.display = 'block';
+                }
+            } catch (error) {
+                alertBox.textContent = 'An error occurred. Please try again.';
+                alertBox.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+
+</html>

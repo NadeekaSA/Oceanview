@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Reports | Ocean View Resort</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .stat-card {
+            text-align: center;
+            padding: 2.5rem;
+        }
+
+        .stat-value {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--secondary);
+            margin: 1rem 0;
+        }
+
+        .stat-label {
+            font-size: 1.1rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="logo">Ocean View Resort (Admin)</div>
+        <nav>
+            <a href="dashboard.html" class="btn btn-accent">Dashboard</a>
+            <button class="btn" onclick="logout()">Logout</button>
+        </nav>
+    </header>
+
+    <div class="container">
+        <h1>System Performance Reports</h1>
+
+        <div class="grid">
+            <!-- Revenue Report -->
+            <div class="card stat-card">
+                <div class="stat-label">Total Revenue</div>
+                <div id="revenueValue" class="stat-value">$0.00</div>
+                <p>Total earnings from all confirmed stays</p>
+            </div>
+
+            <!-- Occupancy Report -->
+            <div class="card stat-card">
+                <div class="stat-label">Current Occupancy</div>
+                <div id="occupancyValue" class="stat-value">0%</div>
+                <div id="occupancyDetail" style="color: #666;">-- / -- Rooms Occupied</div>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top: 2rem;">
+            <h3>System Reports & Export</h3>
+            <p style="margin-bottom: 1.5rem;">Generate and download detailed reservation reports in multiple formats.
+            </p>
+            <div class="grid" style="grid-template-columns: repeat(3, 1fr); gap: 1rem;">
+                <button onclick="exportReport('csv')" class="btn">Export as CSV</button>
+                <button onclick="exportReport('excel')" class="btn">Export as Excel</button>
+                <button onclick="window.print()" class="btn btn-accent">Download PDF</button>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top: 2rem;">
+            <h3>Reporting Insights</h3>
+            <p>Reports are generated in real-time based on the current database state. Occupancy is calculated based on
+                rooms currently marked as 'OCCUPIED'. Revenue includes all 'CHECKED_IN' and 'CHECKED_OUT' reservations.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        async function logout() {
+            await fetch('../logout');
+            window.location.href = '../index.html';
+        }
+
+        function exportReport(format) {
+            window.location.href = `export?format=${format}`;
+        }
+
+        async function loadReports() {
+            try {
+                const response = await fetch('reports');
+                const data = await response.json();
+
+                document.getElementById('revenueValue').textContent = `$${data.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+
+                const occupancyPercent = data.occupancy.total > 0 ?
+                    Math.round((data.occupancy.occupied / data.occupancy.total) * 100) : 0;
+
+                document.getElementById('occupancyValue').textContent = `${occupancyPercent}%`;
+                document.getElementById('occupancyDetail').textContent = `${data.occupancy.occupied} / ${data.occupancy.total} Rooms Occupied`;
+
+            } catch (error) {
+                console.error('Error loading reports:', error);
+            }
+        }
+
+        loadReports();
+    </script>
+</body>
+
+</html>

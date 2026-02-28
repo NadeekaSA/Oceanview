@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | Ocean View Resort</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body>
+    <header>
+        <div class="logo">Ocean View Resort (Admin)</div>
+        <nav>
+            <button class="btn btn-accent" onclick="logout()">Logout</button>
+        </nav>
+    </header>
+
+    <div class="container">
+        <h1>System Configuration & Management</h1>
+
+        <div class="grid">
+            <!-- Room Rate Config -->
+            <div class="card">
+                <h3>Update Room Rates</h3>
+                <form id="rateForm">
+                    <input type="hidden" name="action" value="updateRate">
+                    <div class="form-group">
+                        <select name="roomNumber" required>
+                            <option value="101">Room 101 - Single</option>
+                            <option value="102">Room 102 - Double</option>
+                            <option value="201">Room 201 - Suite</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <input type="number" step="0.01" name="rate" placeholder="New Nightly Rate" required>
+                    </div>
+                    <button type="submit" class="btn" style="width: 100%;">Update Rate</button>
+                </form>
+            </div>
+
+            <!-- Quick Reports -->
+            <div class="card">
+                <h3>System Reports</h3>
+                <p>View all reservation and occupancy reports for decision making.</p>
+                <div style="margin-top: 1.5rem;">
+                    <a href="reports.html" class="btn"
+                        style="display: block; text-align: center; margin-bottom: 0.5rem;">View Occupancy Report</a>
+                    <a href="users.html" class="btn btn-accent" style="display: block; text-align: center;">Manage Staff
+                        Accounts</a>
+                </div>
+            </div>
+        </div>
+
+        <div id="statusMsg" class="alert" style="display: none; margin-top: 2rem;"></div>
+    </div>
+
+    <script>
+        async function logout() {
+            await fetch('../logout');
+            window.location.href = '../index.html';
+        }
+
+        document.getElementById('rateForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new URLSearchParams(new FormData(e.target));
+            const statusMsg = document.getElementById('statusMsg');
+
+            try {
+                const response = await fetch('rooms', { // Servlet mapped to /admin/rooms
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+                });
+                // Assuming RoomServlet returns JSON now
+                statusMsg.textContent = "Rate updated successfully";
+                statusMsg.className = 'alert alert-success';
+                statusMsg.style.display = 'block';
+            } catch (error) {
+                statusMsg.textContent = 'Error updating rate';
+                statusMsg.className = 'alert alert-error';
+                statusMsg.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+
+</html>
