@@ -119,20 +119,73 @@ header {
     width: 100%;
 }
 
-/* Auth Pages */
-.login-container {
-    max-width: 400px;
-    margin: 5rem auto;
-    background: var(--white);
-    padding: 2.5rem;
-    border-radius: var(--border-radius);
-    box-shadow: var(--shadow);
+/* Glassmorphism Login */
+.login-page {
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: url('../assets/resort_login_bg.png') no-repeat center center/cover;
+    position: relative;
 }
 
-.login-container h2 {
-    margin-bottom: 2rem;
+.login-page::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 1;
+}
+
+.login-glass-card {
+    position: relative;
+    z-index: 2;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 3rem;
+    border-radius: 24px;
+    width: 100%;
+    max-width: 450px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    color: white;
+}
+
+.login-glass-card h2 {
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
     text-align: center;
+    background: linear-gradient(to bottom right, #ffffff, #e0e0e0);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.login-glass-card .form-group label {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.login-glass-card input {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+.login-glass-card input::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.login-glass-card .btn {
+    background: var(--accent);
     color: var(--primary);
+    font-size: 1.1rem;
+    margin-top: 1rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
 }
 
 /* Forms */

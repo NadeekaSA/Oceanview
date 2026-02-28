@@ -1,5 +1,4 @@
-package com.oceanview.servlet;
-
+import com.oceanview.dao.GuestDAO;
 import com.oceanview.dao.ReservationDAO;
 import com.oceanview.dao.RoomDAO;
 import com.oceanview.model.Reservation;
@@ -21,6 +20,7 @@ import java.util.UUID;
 public class ReservationServlet extends HttpServlet {
     private ReservationDAO reservationDAO = new ReservationDAO();
     private RoomDAO roomDAO = new RoomDAO();
+    private GuestDAO guestDAO = new GuestDAO();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -81,6 +81,15 @@ public class ReservationServlet extends HttpServlet {
         try {
             if ("book".equals(action)) {
                 int guestId = Integer.parseInt(request.getParameter("guestId"));
+
+                // Validate Guest ID
+                if (guestDAO.getGuestById(guestId) == null) {
+                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                    response.getWriter().write(
+                            "{\"success\": false, \"message\": \"Error: Guest ID " + guestId + " does not exist.\"}");
+                    return;
+                }
+
                 String roomNumber = request.getParameter("roomNumber");
 
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
