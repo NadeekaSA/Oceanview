@@ -60,6 +60,22 @@ public class RoomServlet extends HttpServlet {
                 response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                 response.getWriter().write("{\"success\": false, \"message\": \"Database error\"}");
             }
+        } else if ("add".equals(action)) {
+            String roomNumber = request.getParameter("roomNumber");
+            String type = request.getParameter("type");
+            double rate = Double.parseDouble(request.getParameter("rate"));
+            try {
+                if (roomDAO.addRoom(roomNumber, type, rate)) {
+                    response.getWriter().write("{\"success\": true, \"message\": \"Room added successfully\"}");
+                } else {
+                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                    response.getWriter().write("{\"success\": false, \"message\": \"Failed to add room\"}");
+                }
+            } catch (SQLException e) {
+                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                response.getWriter()
+                        .write("{\"success\": false, \"message\": \"Database error: " + e.getMessage() + "\"}");
+            }
         }
     }
 }

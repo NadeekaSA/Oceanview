@@ -43,4 +43,15 @@ public class RoomDAO {
             return stmt.executeUpdate() > 0;
         }
     }
+
+    public boolean addRoom(String roomNumber, String type, double rate) throws SQLException {
+        String sql = "INSERT INTO rooms (room_number, type, rate, status) VALUES (?, ?, ?, 'AVAILABLE')";
+        try (Connection conn = DBConnection.getInstance().getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, roomNumber);
+            stmt.setString(2, type);
+            stmt.setDouble(3, rate);
+            return stmt.executeUpdate() > 0;
+        }
+    }
 }

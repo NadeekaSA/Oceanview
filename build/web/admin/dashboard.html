@@ -26,10 +26,8 @@
                 <form id="rateForm">
                     <input type="hidden" name="action" value="updateRate">
                     <div class="form-group">
-                        <select name="roomNumber" required>
-                            <option value="101">Room 101 - Single</option>
-                            <option value="102">Room 102 - Double</option>
-                            <option value="201">Room 201 - Suite</option>
+                        <select name="roomNumber" id="rateRoomSelect" required>
+                            <option value="">Loading rooms...</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -39,16 +37,35 @@
                 </form>
             </div>
 
-            <!-- Quick Reports -->
+            <!-- Add New Room -->
             <div class="card">
-                <h3>System Reports</h3>
-                <p>View all reservation and occupancy reports for decision making.</p>
-                <div style="margin-top: 1.5rem;">
-                    <a href="reports.html" class="btn"
-                        style="display: block; text-align: center; margin-bottom: 0.5rem;">View Occupancy Report</a>
-                    <a href="users.html" class="btn btn-accent" style="display: block; text-align: center;">Manage Staff
-                        Accounts</a>
-                </div>
+                <h3>Add New Room</h3>
+                <form id="addRoomForm">
+                    <input type="hidden" name="action" value="add">
+                    <div class="form-group">
+                        <input type="text" name="roomNumber" placeholder="Room Number (e.g. 301)" required>
+                    </div>
+                    <div class="form-group">
+                        <select name="type" required>
+                            <option value="SINGLE">Single</option>
+                            <option value="DOUBLE">Double</option>
+                            <option value="SUITE">Suite</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <input type="number" step="0.01" name="rate" placeholder="Default Rate" required>
+                    </div>
+                    <button type="submit" class="btn btn-accent" style="width: 100%;">Create Room</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top: 2rem;">
+            <h3>Quick Links</h3>
+            <div style="display: flex; gap: 1rem;">
+                <a href="reports.html" class="btn" style="flex: 1; text-align: center;">View Occupancy Report</a>
+                <a href="users.html" class="btn btn-accent" style="flex: 1; text-align: center;">Manage Staff
+                    Accounts</a>
             </div>
         </div>
 
@@ -61,27 +78,52 @@
             window.location.href = '../index.html';
         }
 
-        document.getElementById('rateForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const formData = new URLSearchParams(new FormData(e.target));
-            const statusMsg = document.getElementById('statusMsg');
-
+        async function loadRooms() {
             try {
-                const response = await fetch('rooms', { // Servlet mapped to /admin/rooms
-                    method: 'POST',
-                    body: formData,
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+                const resp = await fetch('../room');
+                const rooms = await resp.json();
+                const select = document.getElementById('rateRoomSelect');
+                select.innerHTML = '<option value="">Select Room</option>';
+                rooms.forEach(r => {
+                    const opt = document.createElement('option');
+                    opt.value = r.roomNumber;
+                    opt.textContent = `Room ${r.roomNumber} (${r.type})`;
+                    select.appendChild(opt);
                 });
-                // Assuming RoomServlet returns JSON now
-                statusMsg.textContent = "Rate updated successfully";
-                statusMsg.className = 'alert alert-success';
-                statusMsg.style.display = 'block';
-            } catch (error) {
-                statusMsg.textContent = 'Error updating rate';
-                statusMsg.className = 'alert alert-error';
-                statusMsg.style.display = 'block';
-            }
-        });
+            } catch (err) { console.error(err); }
+        }
+
+        async function handleForm(formId) {
+            document.getElementById(formId).addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new URLSearchParams(new FormData(e.target));
+                const statusMsg = document.getElementById('statusMsg');
+
+                try {
+                    const response = await fetch('../room', {
+                        method: 'POST',
+                        body: formData,
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+                    });
+                    const result = await response.json();
+                    statusMsg.textContent = result.message;
+                    statusMsg.className = `alert alert-${result.success ? 'success' : 'error'}`;
+                    statusMsg.style.display = 'block';
+                    if (result.success) {
+                        e.target.reset();
+                        loadRooms();
+                    }
+                } catch (error) {
+                    statusMsg.textContent = 'Server communication error';
+                    statusMsg.className = 'alert alert-error';
+                    statusMsg.style.display = 'block';
+                }
+            });
+        }
+
+        loadRooms();
+        handleForm('rateForm');
+        handleForm('addRoomForm');
     </script>
 </body>
 
