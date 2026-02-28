@@ -69,6 +69,7 @@
                 rooms.forEach(room => {
                     let statusClass = 'status-available';
                     if (room.status === 'OCCUPIED' || room.status === 'CHECKED_IN') statusClass = 'status-occupied';
+                    if (room.status === 'RESERVED') statusClass = 'status-maintenance'; // Use orange for reserved too
                     if (room.status === 'MAINTENANCE') statusClass = 'status-maintenance';
                     const tr = document.createElement('tr');
                     tr.innerHTML = `

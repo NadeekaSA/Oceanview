@@ -17,16 +17,41 @@ public class ReservationDAO {
             stmt.setDate(4, new java.sql.Date(reservation.getCheckInDate().getTime()));
             stmt.setDate(5, new java.sql.Date(reservation.getCheckOutDate().getTime()));
             stmt.setDouble(6, reservation.getTotalCost());
-            stmt.setString(7, reservation.getStatus());
+            stmt.setString(7, reservation.getStatus()); // Should be BOOKED from Servlet
 
             int result = stmt.executeUpdate();
             if (result > 0) {
-                // Update room status to OCCUPIED
-                new RoomDAO().updateRoomStatus(reservation.getRoomNumber(), "OCCUPIED");
+                // Update room status to RESERVED (prevent double booking)
+                new RoomDAO().updateRoomStatus(reservation.getRoomNumber(), "RESERVED");
                 return true;
             }
         }
         return false;
+    }
+
+    public List<Reservation> searchReservations(String query) throws SQLException {
+        List<Reservation> reservations = new ArrayList<>();
+        String sql = "SELECT * FROM reservations WHERE reservation_number LIKE ? OR room_number LIKE ? OR CAST(guest_id AS CHAR) LIKE ? ORDER BY reservation_number DESC";
+        try (Connection conn = DBConnection.getInstance().getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
+            String searchTerm = "%" + query + "%";
+            stmt.setString(1, searchTerm);
+            stmt.setString(2, searchTerm);
+            stmt.setString(3, searchTerm);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    reservations.add(new Reservation(
+                            rs.getString("reservation_number"),
+                            rs.getInt("guest_id"),
+                            rs.getString("room_number"),
+                            rs.getDate("check_in_date"),
+                            rs.getDate("check_out_date"),
+                            rs.getDouble("total_cost"),
+                            rs.getString("status")));
+                }
+            }
+        }
+        return reservations;
     }
 
     public List<Reservation> getAllReservations() throws SQLException {
@@ -78,6 +103,18 @@ public class ReservationDAO {
                             if (rs.next()) {
                                 String roomNumber = rs.getString("room_number");
                                 new RoomDAO().updateRoomStatus(roomNumber, "AVAILABLE");
+                            }
+                        }
+                    }
+                } else if ("CHECKED_IN".equals(status)) {
+                    // Update room status to OCCUPIED
+                    String getRoomSql = "SELECT room_number FROM reservations WHERE reservation_number = ?";
+                    try (PreparedStatement getRoomStmt = conn.prepareStatement(getRoomSql)) {
+                        getRoomStmt.setString(1, resNo);
+                        try (ResultSet rs = getRoomStmt.executeQuery()) {
+                            if (rs.next()) {
+                                String roomNumber = rs.getString("room_number");
+                                new RoomDAO().updateRoomStatus(roomNumber, "OCCUPIED");
                             }
                         }
                     }

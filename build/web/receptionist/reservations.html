@@ -30,7 +30,13 @@
             </div>
 
             <div class="card">
-                <h3>All Reservations</h3>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h3>All Reservations</h3>
+                    <div class="search-box" style="width: 300px;">
+                        <input type="text" id="resSearch" placeholder="Search Res #, Room or Guest ID..."
+                            onkeyup="searchReservations()">
+                    </div>
+                </div>
                 <div id="statusMsg" class="alert" style="display: none;"></div>
                 <div class="table-container">
                     <table>
@@ -47,7 +53,7 @@
                         </thead>
                         <tbody id="resTableBody">
                             <tr>
-                                <td colspan="6" style="text-align: center; padding: 2rem;">Loading reservations...</td>
+                                <td colspan="7" style="text-align: center; padding: 2rem;">Loading reservations...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -139,29 +145,60 @@
             } else { estimateSection.style.display = 'none'; }
         }
 
-        async function loadReservations() {
+        async function loadReservations(query = '') {
             try {
-                const response = await fetch('../reservation?action=getAll');
+                const url = query ? `../reservation?action=search&query=${query}` : '../reservation?action=getAll';
+                const response = await fetch(url);
                 const data = await response.json();
                 const tbody = document.getElementById('resTableBody');
-                tbody.innerHTML = data.length === 0 ? '<tr><td colspan="6" style="text-align: center; padding: 2rem;">No reservations found.</td></tr>' : '';
+                tbody.innerHTML = data.length === 0 ? '<tr><td colspan="7" style="text-align: center; padding: 2rem;">No reservations found.</td></tr>' : '';
                 data.forEach(res => {
                     const tr = document.createElement('tr');
                     const isCheckedOut = res.status === 'CHECKED_OUT';
+                    const isBooked = res.status === 'BOOKED';
+                    const isCheckedIn = res.status === 'CHECKED_IN';
+
+                    let statusClass = 'status-occupied';
+                    if (isCheckedOut) statusClass = 'status-available';
+                    if (isBooked) statusClass = 'status-maintenance'; // Using maintenance color for booked
+
                     tr.innerHTML = `
                         <td><strong>${res.reservationNumber}</strong></td>
                         <td>#${res.guestId}</td>
                         <td>${res.roomNumber}</td>
                         <td><small>${res.checkInDate} to ${res.checkOutDate}</small></td>
                         <td>Rs. ${res.totalCost.toFixed(2)}</td>
-                        <td><span class="status-badge ${isCheckedOut ? 'status-available' : 'status-occupied'}">${res.status}</span></td>
+                        <td><span class="status-badge ${statusClass}">${res.status}</span></td>
                         <td>
-                            ${!isCheckedOut ? `<button class="btn btn-sm" onclick="checkOut('${res.reservationNumber}')">Check Out</button>` : `<button class="btn btn-accent btn-sm" onclick="viewBill('${res.reservationNumber}')">View Bill</button>`}
+                            ${isBooked ? `<button class="btn btn-sm btn-accent" onclick="checkIn('${res.reservationNumber}')">Check In</button>` : ''}
+                            ${isCheckedIn ? `<button class="btn btn-sm" onclick="checkOut('${res.reservationNumber}')">Check Out</button>` : ''}
+                            ${isCheckedOut ? `<button class="btn btn-accent btn-sm" onclick="viewBill('${res.reservationNumber}')">View Bill</button>` : ''}
                         </td>
                     `;
                     tbody.appendChild(tr);
                 });
             } catch (error) { console.error(error); }
+        }
+
+        function searchReservations() {
+            const query = document.getElementById('resSearch').value;
+            loadReservations(query);
+        }
+
+        async function checkIn(resNo) {
+            if (!confirm('Guest arrived? Complete check-in for ' + resNo + '?')) return;
+            try {
+                const response = await fetch('../reservation', {
+                    method: 'POST',
+                    body: new URLSearchParams({ action: 'checkin', resNo: resNo }),
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+                });
+                const result = await response.json();
+                if (result.success) {
+                    alert('Guest checked in successfully!');
+                    loadReservations();
+                } else { alert(result.message); }
+            } catch (error) { alert('Error during check-in'); }
         }
 
         async function checkOut(resNo) {

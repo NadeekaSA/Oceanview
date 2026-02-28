@@ -34,6 +34,10 @@ public class ReservationServlet extends HttpServlet {
             if ("getAll".equals(action)) {
                 List<Reservation> list = reservationDAO.getAllReservations();
                 response.getWriter().write(serializeReservationList(list));
+            } else if ("search".equals(action)) {
+                String query = request.getParameter("query");
+                List<Reservation> list = reservationDAO.searchReservations(query);
+                response.getWriter().write(serializeReservationList(list));
             } else if ("get".equals(action)) {
                 String resNo = request.getParameter("resNo");
                 Reservation res = reservationDAO.getReservationByNumber(resNo);
@@ -115,7 +119,7 @@ public class ReservationServlet extends HttpServlet {
 
                 String resNo = "RES-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
                 Reservation res = new Reservation(resNo, guestId, roomNumber, checkIn, checkOut, totalCost,
-                        "CHECKED_IN");
+                        "BOOKED");
 
                 if (reservationDAO.createReservation(res)) {
                     response.getWriter().write("{\"success\": true, \"reservationNumber\": \"" + resNo
@@ -123,6 +127,14 @@ public class ReservationServlet extends HttpServlet {
                 } else {
                     response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                     response.getWriter().write("{\"success\": false, \"message\": \"Failed to create reservation\"}");
+                }
+            } else if ("checkin".equals(action)) {
+                String resNo = request.getParameter("resNo");
+                if (reservationDAO.updateReservationStatus(resNo, "CHECKED_IN")) {
+                    response.getWriter().write("{\"success\": true, \"message\": \"Check-in successful\"}");
+                } else {
+                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                    response.getWriter().write("{\"success\": false, \"message\": \"Check-in failed\"}");
                 }
             } else if ("checkout".equals(action)) {
                 String resNo = request.getParameter("resNo");
