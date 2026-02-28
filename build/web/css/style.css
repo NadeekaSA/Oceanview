@@ -256,6 +256,11 @@ th {
     color: #fa5252;
 }
 
+.status-maintenance {
+    background: #fff4e6;
+    color: #fd7e14;
+}
+
 /* Alerts */
 .alert {
     padding: 1rem;

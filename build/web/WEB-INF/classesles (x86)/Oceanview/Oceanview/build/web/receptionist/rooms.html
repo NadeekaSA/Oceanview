@@ -67,7 +67,9 @@
                 tbody.innerHTML = '';
 
                 rooms.forEach(room => {
-                    const statusClass = room.status === 'AVAILABLE' ? 'status-available' : 'status-occupied';
+                    let statusClass = 'status-available';
+                    if (room.status === 'OCCUPIED' || room.status === 'CHECKED_IN') statusClass = 'status-occupied';
+                    if (room.status === 'MAINTENANCE') statusClass = 'status-maintenance';
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
                         <td><strong>${room.roomNumber}</strong></td>
