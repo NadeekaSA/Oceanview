@@ -8,6 +8,13 @@ import java.util.List;
 
 public class RoomDAO {
     public List<Room> getAllRooms() throws SQLException {
+        // Auto-revert maintenance status if time is up
+        String revertSql = "UPDATE rooms SET status = 'AVAILABLE', maintenance_until = NULL WHERE status = 'MAINTENANCE' AND maintenance_until <= NOW()";
+        try (Connection conn = DBConnection.getInstance().getConnection();
+                Statement stmt = conn.createStatement()) {
+            stmt.executeUpdate(revertSql);
+        }
+
         List<Room> rooms = new ArrayList<>();
         String sql = "SELECT * FROM rooms";
         try (Connection conn = DBConnection.getInstance().getConnection();
@@ -35,7 +42,7 @@ public class RoomDAO {
     }
 
     public boolean updateRoomStatus(String roomNumber, String status) throws SQLException {
-        String sql = "UPDATE rooms SET status = ? WHERE room_number = ?";
+        String sql = "UPDATE rooms SET status = ?, maintenance_until = NULL WHERE room_number = ?";
         try (Connection conn = DBConnection.getInstance().getConnection();
                 PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, status);
@@ -44,8 +51,18 @@ public class RoomDAO {
         }
     }
 
+    public boolean startMaintenance(String roomNumber, int durationMinutes) throws SQLException {
+        String sql = "UPDATE rooms SET status = 'MAINTENANCE', maintenance_until = DATE_ADD(NOW(), INTERVAL ? MINUTE) WHERE room_number = ?";
+        try (Connection conn = DBConnection.getInstance().getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, durationMinutes);
+            stmt.setString(2, roomNumber);
+            return stmt.executeUpdate() > 0;
+        }
+    }
+
     public boolean addRoom(String roomNumber, String type, double rate) throws SQLException {
-        String sql = "INSERT INTO rooms (room_number, type, rate, status) VALUES (?, ?, ?, 'AVAILABLE')";
+        String sql = "INSERT INTO rooms (room_number, type, rate, status, maintenance_until) VALUES (?, ?, ?, 'AVAILABLE', NULL)";
         try (Connection conn = DBConnection.getInstance().getConnection();
                 PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, roomNumber);
