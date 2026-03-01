@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS rooms (
     room_number VARCHAR(10) PRIMARY KEY,
     type ENUM('SINGLE', 'DOUBLE', 'SUITE') NOT NULL,
     rate DECIMAL(10, 2) NOT NULL,
-    status ENUM('AVAILABLE', 'OCCUPIED', 'MAINTENANCE') DEFAULT 'AVAILABLE'
+    status ENUM('AVAILABLE', 'OCCUPIED', 'RESERVED', 'MAINTENANCE') DEFAULT 'AVAILABLE'
 );
 
 -- Table for Reservations
@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS reservations (
     check_in_date DATE NOT NULL,
     check_out_date DATE NOT NULL,
     total_cost DECIMAL(10, 2),
-    status ENUM('PENDING', 'CONFIRMED', 'CHECKED_IN', 'CHECKED_OUT', 'CANCELLED') DEFAULT 'PENDING',
+    status ENUM('PENDING', 'BOOKED', 'CONFIRMED', 'CHECKED_IN', 'CHECKED_OUT', 'CANCELLED') DEFAULT 'PENDING',
     FOREIGN KEY (guest_id) REFERENCES guests(id),
     FOREIGN KEY (room_number) REFERENCES rooms(room_number)
 );
