@@ -6,28 +6,24 @@ import java.sql.SQLException;
 
 public class DBConnection {
     private static DBConnection instance;
-    private Connection connection;
     private String url = "jdbc:mysql://localhost:3306/oceanview_db";
     private String username = "root";
     private String password = ""; // User should update this as per their MySQL config
 
-    private DBConnection() throws SQLException {
+    private DBConnection() {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            this.connection = DriverManager.getConnection(url, username, password);
         } catch (ClassNotFoundException e) {
-            throw new SQLException(e);
+            e.printStackTrace();
         }
     }
 
-    public Connection getConnection() {
-        return connection;
+    public Connection getConnection() throws SQLException {
+        return DriverManager.getConnection(url, username, password);
     }
 
-    public static DBConnection getInstance() throws SQLException {
+    public static DBConnection getInstance() {
         if (instance == null) {
-            instance = new DBConnection();
-        } else if (instance.getConnection().isClosed()) {
             instance = new DBConnection();
         }
         return instance;
