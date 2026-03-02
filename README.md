@@ -40,6 +40,8 @@ Before you begin, ensure you have the following installed:
 
 ## 🏗️ Build and Deployment
 
+The deployment of the Oceanview Hotel Management System follows a standard Jakarta EE workflow, ensuring a seamless transition from development to a production-ready environment. The core of this process involves packaging the compiled Java classes, JSP files, and static assets into a Web Application Archive (WAR) file using Apache Ant. This artifact encapsulates all necessary components, including the `WEB-INF/lib` dependencies and deployment descriptors. For hosting, Apache Tomcat serves as the primary application container. Deployment is achieved by placing the generated `Oceanview.war` into Tomcat’s `webapps` directory, where the server’s hot-deployment feature automatically expands the file and initializes the servlet context. Crucially, the deployment lifecycle must also account for database synchronization; the MySQL backend must be initialized with the provided `schema.sql` to ensure structural integrity and default administrative access. By following this structured approach, administrators can guarantee high availability and consistent performance for the Oceanview system across various server environments.
+
 ### 1. Build the Project
 Use Apache Ant to compile and package the application:
 ```bash
