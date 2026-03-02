@@ -44,7 +44,10 @@ public class ReportServlet extends HttpServlet {
                 long activeBookings = 0;
                 if (reservations != null) {
                     activeBookings = reservations.stream()
-                            .filter(r -> r != null && "CHECKED_IN".equals(r.getStatus()))
+                            .filter(r -> r != null &&
+                                    ("CHECKED_IN".equals(r.getStatus()) ||
+                                            "BOOKED".equals(r.getStatus()) ||
+                                            "CONFIRMED".equals(r.getStatus())))
                             .count();
                 }
 
@@ -120,7 +123,8 @@ public class ReportServlet extends HttpServlet {
             // General catch to prevent 500 error page
             e.printStackTrace();
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            response.getWriter().write("{\"success\": false, \"message\": \"Server error: " + e.getMessage() + "\"}");
+            String message = e.getMessage() != null ? e.getMessage().replace("\"", "\\\"") : "Unknown Error";
+            response.getWriter().write("{\"success\": false, \"message\": \"Server error: " + message + "\"}");
         }
     }
 }
