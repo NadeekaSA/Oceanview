@@ -4,12 +4,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login | Ocean View Resort</title>
+    <title>Login | Lucky Resort</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <div class="login-container">
-        <h2>Ocean View Resort</h2>
+        <h2>Lucky Resort</h2>
         <p style="text-align: center; color: #666; margin-bottom: 2rem;">Staff Management Portal</p>
         
         <% if (request.getAttribute("error") != null) { %>

@@ -1,5 +1,5 @@
-CREATE DATABASE IF NOT EXISTS oceanview_db;
-USE oceanview_db;
+-- CREATE DATABASE IF NOT EXISTS oceanview_db;
+-- USE oceanview_db;
 
 -- Table for Users (Admin and Receptionist)
 CREATE TABLE IF NOT EXISTS users (

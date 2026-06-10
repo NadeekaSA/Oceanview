@@ -126,7 +126,7 @@ header {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: url('../assets/resort_login_bg.png') no-repeat center center/cover;
+    background: url('resort_login_bg.png') no-repeat center center/cover;
     position: relative;
 }
 
