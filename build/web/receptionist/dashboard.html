@@ -4,112 +4,139 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Receptionist Dashboard | Ocean View Resort</title>
+    <title>Receptionist Dashboard | Lucky Resort</title>
     <link rel="stylesheet" href="../css/style.css">
 </head>
 
 <body>
-    <header>
-        <div class="logo">Ocean View Resort</div>
-        <nav>
-            <button class="btn btn-accent" onclick="logout()">Logout</button>
-        </nav>
-    </header>
+    <div class="layout-wrapper">
+        <aside class="sidebar">
+            <div class="sidebar-header">Lucky Resort</div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-item active">Dashboard Overview</a>
+                <a href="guests.html" class="nav-item">Guest Management</a>
+                <a href="rooms.html" class="nav-item">Room Status</a>
+                <a href="reservations.html" class="nav-item">Reservations</a>
+            </nav>
+            <div class="sidebar-footer">
+                <button class="btn btn-sm" style="width:100%" onclick="logout()">Logout</button>
+            </div>
+        </aside>
 
-    <div class="container text-center">
-        <h1 style="margin-bottom: 2rem;">Receptionist Dashboard</h1>
-
-        <div class="grid">
-            <!-- Guest Registration -->
-            <div class="card">
-                <h3>Register New Guest</h3>
-                <form id="guestForm">
-                    <input type="hidden" name="action" value="register">
-                    <div class="form-group">
-                        <input type="text" name="name" placeholder="Full Name" required>
-                    </div>
-                    <div class="form-group">
-                        <input type="text" name="address" placeholder="Address" required>
-                    </div>
-                    <div class="form-group">
-                        <input type="text" name="contact" placeholder="Contact Number" required>
-                    </div>
-                    <div class="form-group">
-                        <input type="email" name="email" placeholder="Email Address" required>
-                    </div>
-                    <div class="form-group">
-                        <input type="text" name="idCard" placeholder="ID Card Number" required>
-                    </div>
-                    <button type="submit" class="btn" style="width: 100%;">Register Guest</button>
-                </form>
+        <main class="main-content">
+            <div class="top-bar">
+                <h2 id="viewTitle">Dashboard Overview</h2>
+                <div class="user-info">Logged in as: <strong>Receptionist</strong></div>
             </div>
 
-            <!-- Room Booking -->
-            <div class="card">
-                <h3>New Reservation</h3>
-                <form id="resForm">
-                    <input type="hidden" name="action" value="book">
-                    <div class="form-group">
-                        <input type="number" name="guestId" placeholder="Guest ID" required>
+            <div class="grid">
+                <div class="card">
+                    <h3>At a Glance</h3>
+                    <div id="statsRow"
+                        style="display: flex; gap: 2rem; justify-content: space-around; text-align: center;">
+                        <div>
+                            <h1 id="statAvailable">--</h1><small>Available Rooms</small>
+                        </div>
+                        <div>
+                            <h1 id="statOccupied">--</h1><small>Occupied Rooms</small>
+                        </div>
+                        <div>
+                            <h1 id="statTotalRes">--</h1><small>Active Bookings</small>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <select name="roomNumber" required>
-                            <option value="">Select Room</option>
-                            <option value="101">101 - Single</option>
-                            <option value="102">102 - Double</option>
-                            <option value="201">201 - Suite</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Check-in Date</label>
-                        <input type="date" name="checkIn" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Check-out Date</label>
-                        <input type="date" name="checkOut" required>
-                    </div>
-                    <button type="submit" class="btn btn-accent" style="width: 100%;">Create Booking</button>
-                </form>
-            </div>
-        </div>
+                </div>
 
-        <div id="statusMsg" class="alert" style="display: none; margin-top: 2rem;"></div>
+                <div class="card">
+                    <h3>Quick Actions</h3>
+                    <div style="display: flex; flex-direction: column; gap: 1rem;">
+                        <a href="guests.html" class="btn">Register New Guest</a>
+                        <a href="reservations.html" class="btn btn-accent">New Reservation</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top: 2rem;">
+                <h3>Today's Activity</h3>
+                <div id="statusMsg" class="alert" style="display: none;"></div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Res #</th>
+                                <th>Guest</th>
+                                <th>Room</th>
+                                <th>Stay Dates</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="todayResBody">
+                            <tr>
+                                <td colspan="6" style="text-align: center; padding: 2rem;">Loading today's activity...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
     </div>
 
+    <script src="../js/help_manager.js"></script>
     <script>
         async function logout() {
             await fetch('../logout');
             window.location.href = '../index.html';
         }
 
-        async function handleForm(formId, url) {
-            document.getElementById(formId).addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const formData = new URLSearchParams(new FormData(e.target));
-                const statusMsg = document.getElementById('statusMsg');
-
-                try {
-                    const response = await fetch(url, {
-                        method: 'POST',
-                        body: formData,
-                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-                    });
-                    const result = await response.json();
-
-                    statusMsg.textContent = result.message || (result.success ? "Operation Successful" : "Operation Failed");
-                    statusMsg.className = `alert ${result.success ? 'alert-success' : 'alert-error'}`;
-                    statusMsg.style.display = 'block';
-                    if (result.success) e.target.reset();
-                } catch (error) {
-                    statusMsg.textContent = 'Connection Error';
-                    statusMsg.className = 'alert alert-error';
-                    statusMsg.style.display = 'block';
-                }
-            });
+        async function loadStats() {
+            try {
+                const response = await fetch('../report?action=stats');
+                const stats = await response.json();
+                document.getElementById('statAvailable').innerText = stats.availableRooms;
+                document.getElementById('statOccupied').innerText = stats.occupiedRooms;
+                document.getElementById('statTotalRes').innerText = stats.activeBookings;
+            } catch (error) {
+                console.error('Error loading stats:', error);
+                document.getElementById('statAvailable').innerText = '!';
+            }
         }
 
-        handleForm('guestForm', '../guest');
-        handleForm('resForm', '../reservation');
+        async function loadRecentActivity() {
+            try {
+                const response = await fetch('../report?action=recent');
+                const activity = await response.json();
+                const tbody = document.getElementById('todayResBody');
+                tbody.innerHTML = '';
+
+                if (!activity || activity.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #666; padding: 2rem;">No recent activity.</td></tr>';
+                    return;
+                }
+
+                activity.forEach(item => {
+                    const tr = document.createElement('tr');
+                    const isCheckedOut = item.status === 'CHECKED_OUT';
+                    tr.innerHTML = `
+                        <td><strong>${item.reservationNumber}</strong></td>
+                        <td>Guest #${item.guestId}</td>
+                        <td>${item.roomNumber}</td>
+                        <td><small>${item.checkInDate} to ${item.checkOutDate}</small></td>
+                        <td>Rs. ${parseFloat(item.totalCost).toFixed(2)}</td>
+                        <td><span class="status-badge ${isCheckedOut ? 'status-available' : 'status-occupied'}">${item.status}</span></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (error) {
+                console.error('Error loading activity:', error);
+                document.getElementById('todayResBody').innerHTML = '<tr><td colspan="6" style="text-align: center; color: #fa5252; padding: 2rem;">Error loading recent activity. Please try again later.</td></tr>';
+            }
+        }
+
+        // Initialize dashboard
+        loadStats();
+        loadRecentActivity();
+        initHelp('dashboard');
     </script>
 </body>
 

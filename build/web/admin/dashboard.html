@@ -4,84 +4,135 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard | Ocean View Resort</title>
+    <title>Admin Dashboard | Lucky Resort</title>
     <link rel="stylesheet" href="../css/style.css">
 </head>
 
 <body>
-    <header>
-        <div class="logo">Ocean View Resort (Admin)</div>
-        <nav>
-            <button class="btn btn-accent" onclick="logout()">Logout</button>
-        </nav>
-    </header>
+    <div class="layout-wrapper">
+        <aside class="sidebar">
+            <div class="sidebar-header">Lucky Resort (Admin)</div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-item active">System Configuration</a>
+                <a href="users.html" class="nav-item">Staff Management</a>
+                <a href="reports.html" class="nav-item">System Reports</a>
+            </nav>
+            <div class="sidebar-footer">
+                <button class="btn btn-sm" style="width:100%" onclick="logout()">Logout</button>
+            </div>
+        </aside>
 
-    <div class="container">
-        <h1>System Configuration & Management</h1>
-
-        <div class="grid">
-            <!-- Room Rate Config -->
-            <div class="card">
-                <h3>Update Room Rates</h3>
-                <form id="rateForm">
-                    <input type="hidden" name="action" value="updateRate">
-                    <div class="form-group">
-                        <select name="roomNumber" required>
-                            <option value="101">Room 101 - Single</option>
-                            <option value="102">Room 102 - Double</option>
-                            <option value="201">Room 201 - Suite</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <input type="number" step="0.01" name="rate" placeholder="New Nightly Rate" required>
-                    </div>
-                    <button type="submit" class="btn" style="width: 100%;">Update Rate</button>
-                </form>
+        <main class="main-content">
+            <div class="top-bar">
+                <h2 id="viewTitle">System Configuration</h2>
+                <div class="user-info">Logged in as: <strong>Administrator</strong></div>
             </div>
 
-            <!-- Quick Reports -->
-            <div class="card">
-                <h3>System Reports</h3>
-                <p>View all reservation and occupancy reports for decision making.</p>
-                <div style="margin-top: 1.5rem;">
-                    <a href="reports.html" class="btn"
-                        style="display: block; text-align: center; margin-bottom: 0.5rem;">View Occupancy Report</a>
-                    <a href="users.html" class="btn btn-accent" style="display: block; text-align: center;">Manage Staff
-                        Accounts</a>
+            <div class="grid">
+                <!-- Room Rate Config -->
+                <div class="card">
+                    <h3>Update Room Rates</h3>
+                    <p style="margin-bottom: 1rem; color: #666;">Modify nightly rates for existing rooms.</p>
+                    <form id="rateForm">
+                        <input type="hidden" name="action" value="updateRate">
+                        <div class="form-group">
+                            <label>Select Room</label>
+                            <select name="roomNumber" id="rateRoomSelect" required>
+                                <option value="">Loading rooms...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>New Nightly Rate (Rs.)</label>
+                            <input type="number" step="0.01" name="rate" placeholder="e.g. 150.00" required>
+                        </div>
+                        <button type="submit" class="btn" style="width: 100%;">Update Rate</button>
+                    </form>
+                </div>
+
+                <!-- Add New Room -->
+                <div class="card">
+                    <h3>Add New Room</h3>
+                    <p style="margin-bottom: 1rem; color: #666;">Register a new room into the system.</p>
+                    <form id="addRoomForm">
+                        <input type="hidden" name="action" value="add">
+                        <div class="form-group">
+                            <label>Room Number</label>
+                            <input type="text" name="roomNumber" placeholder="e.g. 301" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Room Type</label>
+                            <select name="type" required>
+                                <option value="SINGLE">Single</option>
+                                <option value="DOUBLE">Double</option>
+                                <option value="SUITE">Suite</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Default Nightly Rate (Rs.)</label>
+                            <input type="number" step="0.01" name="rate" placeholder="e.g. 120.00" required>
+                        </div>
+                        <button type="submit" class="btn btn-accent" style="width: 100%;">Create Room</button>
+                    </form>
                 </div>
             </div>
-        </div>
 
-        <div id="statusMsg" class="alert" style="display: none; margin-top: 2rem;"></div>
+            <div id="statusMsg" class="alert" style="display: none; margin-top: 2rem;"></div>
+        </main>
     </div>
 
+    <script src="../js/help_manager.js"></script>
     <script>
         async function logout() {
             await fetch('../logout');
             window.location.href = '../index.html';
         }
 
-        document.getElementById('rateForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const formData = new URLSearchParams(new FormData(e.target));
-            const statusMsg = document.getElementById('statusMsg');
-
+        async function loadRooms() {
             try {
-                const response = await fetch('rooms', { // Servlet mapped to /admin/rooms
-                    method: 'POST',
-                    body: formData,
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+                const resp = await fetch('../room');
+                const rooms = await resp.json();
+                const select = document.getElementById('rateRoomSelect');
+                select.innerHTML = '<option value="">Select Room</option>';
+                rooms.forEach(r => {
+                    const opt = document.createElement('option');
+                    opt.value = r.roomNumber;
+                    opt.textContent = `Room ${r.roomNumber} (${r.type}) - Rs. ${r.rate}/night`;
+                    select.appendChild(opt);
                 });
-                // Assuming RoomServlet returns JSON now
-                statusMsg.textContent = "Rate updated successfully";
-                statusMsg.className = 'alert alert-success';
-                statusMsg.style.display = 'block';
-            } catch (error) {
-                statusMsg.textContent = 'Error updating rate';
-                statusMsg.className = 'alert alert-error';
-                statusMsg.style.display = 'block';
-            }
-        });
+            } catch (err) { console.error(err); }
+        }
+
+        async function handleForm(formId) {
+            document.getElementById(formId).addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new URLSearchParams(new FormData(e.target));
+                const statusMsg = document.getElementById('statusMsg');
+
+                try {
+                    const response = await fetch('../room', {
+                        method: 'POST',
+                        body: formData,
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+                    });
+                    const result = await response.json();
+                    statusMsg.textContent = result.message;
+                    statusMsg.className = `alert alert-${result.success ? 'success' : 'error'}`;
+                    statusMsg.style.display = 'block';
+                    if (result.success) {
+                        e.target.reset();
+                        loadRooms();
+                    }
+                } catch (error) {
+                    statusMsg.textContent = 'Server communication error';
+                    statusMsg.className = 'alert alert-error';
+                    statusMsg.style.display = 'block';
+                }
+            });
+        }
+
+        loadRooms();
+        handleForm('rateForm');
+        handleForm('addRoomForm');
     </script>
 </body>
 

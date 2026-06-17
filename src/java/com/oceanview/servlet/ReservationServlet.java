@@ -1,5 +1,6 @@
 package com.oceanview.servlet;
 
+import com.oceanview.dao.GuestDAO;
 import com.oceanview.dao.ReservationDAO;
 import com.oceanview.dao.RoomDAO;
 import com.oceanview.model.Reservation;
@@ -21,22 +22,86 @@ import java.util.UUID;
 public class ReservationServlet extends HttpServlet {
     private ReservationDAO reservationDAO = new ReservationDAO();
     private RoomDAO roomDAO = new RoomDAO();
+    private GuestDAO guestDAO = new GuestDAO();
+
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        String action = request.getParameter("action");
+        try {
+            if ("getAll".equals(action)) {
+                List<Reservation> list = reservationDAO.getAllReservations();
+                response.getWriter().write(serializeReservationList(list));
+            } else if ("search".equals(action)) {
+                String query = request.getParameter("query");
+                List<Reservation> list = reservationDAO.searchReservations(query);
+                response.getWriter().write(serializeReservationList(list));
+            } else if ("get".equals(action)) {
+                String resNo = request.getParameter("resNo");
+                Reservation res = reservationDAO.getReservationByNumber(resNo);
+                if (res != null) {
+                    response.getWriter().write(serializeReservation(res));
+                } else {
+                    response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                    response.getWriter().write("{\"success\": false, \"message\": \"Reservation not found\"}");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            response.getWriter().write("{\"success\": false, \"message\": \"Database error: " + e.getMessage() + "\"}");
+        }
+    }
+
+    private String serializeReservation(Reservation r) {
+        return "{"
+                + "\"reservationNumber\":\"" + r.getReservationNumber() + "\","
+                + "\"guestId\":" + r.getGuestId() + ","
+                + "\"roomNumber\":\"" + r.getRoomNumber() + "\","
+                + "\"checkInDate\":\"" + r.getCheckInDate().toString() + "\","
+                + "\"checkOutDate\":\"" + r.getCheckOutDate().toString() + "\","
+                + "\"totalCost\":" + r.getTotalCost() + ","
+                + "\"status\":\"" + r.getStatus() + "\""
+                + "}";
+    }
+
+    private String serializeReservationList(List<Reservation> list) {
+        StringBuilder json = new StringBuilder("[");
+        for (int i = 0; i < list.size(); i++) {
+            json.append(serializeReservation(list.get(i)));
+            if (i < list.size() - 1)
+                json.append(",");
+        }
+        json.append("]");
+        return json.toString();
+    }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
         String action = request.getParameter("action");
-        if ("book".equals(action)) {
-            try {
+        try {
+            if ("book".equals(action)) {
                 int guestId = Integer.parseInt(request.getParameter("guestId"));
+
+                // Validate Guest ID
+                if (guestDAO.getGuestById(guestId) == null) {
+                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                    response.getWriter().write(
+                            "{\"success\": false, \"message\": \"Error: Guest ID " + guestId + " does not exist.\"}");
+                    return;
+                }
+
                 String roomNumber = request.getParameter("roomNumber");
 
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
                 Date checkIn = sdf.parse(request.getParameter("checkIn"));
                 Date checkOut = sdf.parse(request.getParameter("checkOut"));
 
-                // Calculate total cost
                 long diffInMillies = Math.abs(checkOut.getTime() - checkIn.getTime());
                 long diff = diffInMillies / (1000 * 60 * 60 * 24);
                 if (diff == 0)
@@ -54,18 +119,77 @@ public class ReservationServlet extends HttpServlet {
 
                 String resNo = "RES-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
                 Reservation res = new Reservation(resNo, guestId, roomNumber, checkIn, checkOut, totalCost,
-                        "CHECKED_IN");
+                        "BOOKED");
 
                 if (reservationDAO.createReservation(res)) {
-                    response.getWriter().write("{\"success\": true, \"reservationNumber\": \"" + resNo + "\"}");
+                    response.getWriter().write("{\"success\": true, \"reservationNumber\": \"" + resNo
+                            + "\", \"totalCost\": " + totalCost + "}");
                 } else {
                     response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                     response.getWriter().write("{\"success\": false, \"message\": \"Failed to create reservation\"}");
                 }
-            } catch (SQLException | ParseException e) {
-                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                response.getWriter().write("{\"success\": false, \"message\": \"Error processing reservation\"}");
+            } else if ("checkin".equals(action)) {
+                String resNo = request.getParameter("resNo");
+                if (reservationDAO.updateReservationStatus(resNo, "CHECKED_IN")) {
+                    response.getWriter().write("{\"success\": true, \"message\": \"Check-in successful\"}");
+                } else {
+                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                    response.getWriter().write("{\"success\": false, \"message\": \"Check-in failed\"}");
+                }
+            } else if ("checkout".equals(action)) {
+                String resNo = request.getParameter("resNo");
+                if (reservationDAO.updateReservationStatus(resNo, "CHECKED_OUT")) {
+                    response.getWriter().write("{\"success\": true, \"message\": \"Check-out successful\"}");
+                } else {
+                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                    response.getWriter().write("{\"success\": false, \"message\": \"Check-out failed\"}");
+                }
+            } else if ("cancel".equals(action)) {
+                String resNo = request.getParameter("resNo");
+                if (reservationDAO.cancelReservation(resNo)) {
+                    response.getWriter()
+                            .write("{\"success\": true, \"message\": \"Reservation cancelled successfully\"}");
+                } else {
+                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                    response.getWriter().write("{\"success\": false, \"message\": \"Cancel failed\"}");
+                }
+            } else if ("update".equals(action)) {
+                String resNo = request.getParameter("resNo");
+                String roomNumber = request.getParameter("roomNumber");
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+                Date checkIn = sdf.parse(request.getParameter("checkIn"));
+                Date checkOut = sdf.parse(request.getParameter("checkOut"));
+
+                // Recalculate cost
+                long diffInMillies = Math.abs(checkOut.getTime() - checkIn.getTime());
+                long diff = diffInMillies / (1000 * 60 * 60 * 24);
+                if (diff == 0)
+                    diff = 1;
+
+                double rate = 0;
+                List<Room> rooms = roomDAO.getAllRooms();
+                for (Room r : rooms) {
+                    if (r.getRoomNumber().equals(roomNumber)) {
+                        rate = r.getRate();
+                        break;
+                    }
+                }
+                double totalCost = diff * rate;
+
+                Reservation res = new Reservation(resNo, 0, roomNumber, checkIn, checkOut, totalCost, "");
+                if (reservationDAO.updateReservation(res)) {
+                    response.getWriter().write(
+                            "{\"success\": true, \"message\": \"Reservation updated successfully\", \"totalCost\": "
+                                    + totalCost + "}");
+                } else {
+                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                    response.getWriter().write("{\"success\": false, \"message\": \"Update failed\"}");
+                }
             }
+        } catch (SQLException | ParseException e) {
+            e.printStackTrace();
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            response.getWriter().write("{\"success\": false, \"message\": \"Server error: " + e.getMessage() + "\"}");
         }
     }
 }

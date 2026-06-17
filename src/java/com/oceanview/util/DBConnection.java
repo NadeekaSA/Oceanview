@@ -6,28 +6,42 @@ import java.sql.SQLException;
 
 public class DBConnection {
     private static DBConnection instance;
-    private Connection connection;
-    private String url = "jdbc:mysql://localhost:3306/oceanview_db";
-    private String username = "root";
-    private String password = ""; // User should update this as per their MySQL config
+    private String url;
+    private String username;
+    private String password;
 
-    private DBConnection() throws SQLException {
+    private DBConnection() {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            this.connection = DriverManager.getConnection(url, username, password);
         } catch (ClassNotFoundException e) {
-            throw new SQLException(e);
+            e.printStackTrace();
+        }
+
+        // Try reading Railway/cloud environment variables first
+        String host = System.getenv("MYSQLHOST");
+        String port = System.getenv("MYSQLPORT");
+        String db = System.getenv("MYSQLDATABASE");
+        String user = System.getenv("MYSQLUSER");
+        String pass = System.getenv("MYSQLPASSWORD");
+
+        if (host != null && port != null && db != null) {
+            this.url = "jdbc:mysql://" + host + ":" + port + "/" + db + "?useSSL=false&allowPublicKeyRetrieval=true";
+            this.username = user;
+            this.password = pass;
+        } else {
+            // Local fallback for development
+            this.url = "jdbc:mysql://localhost:3306/oceanview_db";
+            this.username = "root";
+            this.password = "";
         }
     }
 
-    public Connection getConnection() {
-        return connection;
+    public Connection getConnection() throws SQLException {
+        return DriverManager.getConnection(url, username, password);
     }
 
-    public static DBConnection getInstance() throws SQLException {
+    public static DBConnection getInstance() {
         if (instance == null) {
-            instance = new DBConnection();
-        } else if (instance.getConnection().isClosed()) {
             instance = new DBConnection();
         }
         return instance;

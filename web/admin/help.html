@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Help | Lucky Resort</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .help-card {
+            margin-bottom: 2rem;
+        }
+
+        .help-card h3 {
+            border-bottom: 3px solid var(--accent);
+            width: auto;
+            padding-right: 2rem;
+        }
+
+        .step-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .step-list li {
+            margin-bottom: 1rem;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        .step-list li::before {
+            content: '🛠️';
+            position: absolute;
+            left: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="layout-wrapper">
+        <aside class="sidebar">
+            <div class="sidebar-header">Admin Portal</div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-item">System Overview</a>
+                <a href="users.html" class="nav-item">Staff Management</a>
+                <a href="reports.html" class="nav-item">Revenue Reports</a>
+                <a href="help.html" class="nav-item active">System Help</a>
+            </nav>
+            <div class="sidebar-footer">
+                <button class="btn btn-sm" style="width:100%" onclick="location.href='../logout'">Logout</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="top-bar">
+                <h2>Admin Support Guide</h2>
+                <div class="user-info">Advanced Operations</div>
+            </div>
+
+            <div class="grid">
+                <div class="card help-card">
+                    <h3>👥 User & Staff Control</h3>
+                    <ul class="step-list">
+                        <li><strong>Adding Staff:</strong> Create Receptionist accounts with secure passwords.</li>
+                        <li><strong>Security:</strong> Advise staff to use strong passwords and log out after their
+                            shift.</li>
+                    </ul>
+                </div>
+
+                <div class="card help-card">
+                    <h3>🏨 Property Configuration</h3>
+                    <ul class="step-list">
+                        <li><strong>Add Rooms:</strong> Use the System Overview to add new rooms as the resort expands.
+                        </li>
+                        <li><strong>Rate Management:</strong> Update nightly rates (LKR) to adapt to peak or off-peak
+                            seasons.</li>
+                    </ul>
+                </div>
+
+                <div class="card help-card">
+                    <h3>📊 Financial Reporting</h3>
+                    <ul class="step-list">
+                        <li><strong>Occupancy Stats:</strong> Track real-time and historical room usage.</li>
+                        <li><strong>Data Export:</strong> All reports can be exported to Excel or CSV for external
+                            accounting.</li>
+                    </ul>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Room Status | Lucky Resort</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body>
+    <div class="layout-wrapper">
+        <aside class="sidebar">
+            <div class="sidebar-header">Lucky Resort</div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-item">Dashboard Overview</a>
+                <a href="guests.html" class="nav-item">Guest Management</a>
+                <a href="rooms.html" class="nav-item active">Room Status</a>
+                <a href="reservations.html" class="nav-item">Reservations</a>
+            </nav>
+            <div class="sidebar-footer">
+                <button class="btn btn-sm" style="width:100%" onclick="logout()">Logout</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="top-bar">
+                <h2>Room Status & Rates</h2>
+                <div class="user-info">Live Occupancy View</div>
+            </div>
+
+            <div class="card">
+                <h3>All Rooms</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Room #</th>
+                                <th>Type</th>
+                                <th>Rate (per night)</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="roomTableBody">
+                            <tr>
+                                <td colspan="5" style="text-align: center; padding: 2rem;">Loading rooms...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="../js/help_manager.js"></script>
+    <script>
+        async function logout() {
+            await fetch('../logout');
+            window.location.href = '../index.html';
+        }
+
+        async function loadRooms() {
+            try {
+                const response = await fetch('../room');
+                const rooms = await response.json();
+                const tbody = document.getElementById('roomTableBody');
+                tbody.innerHTML = '';
+
+                rooms.forEach(room => {
+                    let statusClass = 'status-available';
+                    if (room.status === 'OCCUPIED' || room.status === 'CHECKED_IN') statusClass = 'status-occupied';
+                    if (room.status === 'RESERVED') statusClass = 'status-maintenance'; // Use orange for reserved too
+                    if (room.status === 'MAINTENANCE') statusClass = 'status-maintenance';
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td><strong>${room.roomNumber}</strong></td>
+                        <td>${room.type}</td>
+                        <td>Rs. ${room.rate.toFixed(2)}</td>
+                        <td><span class="status-badge ${statusClass}">${room.status}</span></td>
+                        <td>
+                            ${room.status === 'AVAILABLE' ?
+                            `<a href="reservations.html?room=${room.roomNumber}" class="btn btn-sm">Book</a>
+                             <button class="btn btn-sm btn-accent" onclick="setMaintenance('${room.roomNumber}')">Maintain</button>` :
+                            `<button class="btn btn-sm" disabled>${room.status}</button>`}
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (error) {
+                console.error('Error loading rooms:', error);
+            }
+        }
+
+        async function setMaintenance(roomNumber) {
+            if (!confirm(`Set room ${roomNumber} to maintenance for 10 minutes?`)) return;
+
+            const formData = new URLSearchParams();
+            formData.append('action', 'maintenance');
+            formData.append('roomNumber', roomNumber);
+
+            try {
+                const response = await fetch('../room', {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+                });
+                const result = await response.json();
+                alert(result.message);
+                if (result.success) loadRooms();
+            } catch (error) {
+                alert('Connection error');
+            }
+        }
+
+        loadRooms();
+    </script>
+</body>
+
+</html>
